@@ -1,4 +1,4 @@
-# green_markdown_viewer — Green Markdown (`gmd`)
+# Green Markdown (`gmd`)
 
 A lightweight, Typora-style markdown editor. It opens `.md` files as clean,
 always-editable documents, one file per window. Theme and behavior live in plain
@@ -23,7 +23,8 @@ and Xcode Command Line Tools on macOS. On Linux, also install the
 WebView2 is already present on Windows 10/11.
 
 ```bash
-cd green_markdown_viewer
+git clone https://github.com/macswg/green-markdown.git
+cd green-markdown
 npm install
 npm run tauri dev -- -- /path/to/file.md   # dev window with hot reload
 npm run tauri build                         # release app in src-tauri/target/release/bundle/
@@ -34,8 +35,51 @@ On macOS the build produces `Green Markdown.app` (plus a `.dmg`). Copy it to
 any `.md` → Get Info → Open with → Green Markdown → Change All. The app isn't
 signed, but a build made on your own Mac opens normally.
 
-Build on each machine you use it on. The build records that checkout's
-`config/` path, so every machine uses the repo's config (sync it with git).
+A local build records that checkout's `config/` path, so the machine uses the
+repo's config (sync it with git).
+
+### Installing a release instead
+
+Download `Green_Markdown_universal.app.tar.gz` (or the `.msi`/`.AppImage`) from
+[Releases](https://github.com/macswg/green-markdown/releases).
+On macOS, unpack it into `/Applications` and clear the download quarantine once
+(the app is ad-hoc signed, not notarized):
+
+```bash
+xattr -dr com.apple.quarantine "/Applications/Green Markdown.app"
+```
+
+A release build uses the repo `config/` if this machine has a checkout at the
+same path as the build machine (it won't, for CI builds), otherwise
+`~/Library/Application Support/Green Markdown/config` (`%APPDATA%\Green
+Markdown\config`, `~/.config/Green Markdown/config`), created from the defaults
+on first launch. Point `GMD_CONFIG_DIR` at the repo `config/` to use that
+instead.
+
+## Updating
+
+Green Markdown menu (Help menu on Windows/Linux) → **Check for Updates…**. It
+never checks on its own. If a newer release exists it shows the notes,
+downloads and installs it (the banner shows progress), then offers to restart.
+Updates are verified against the public key in `tauri.conf.json`.
+
+## Releasing
+
+```bash
+scripts/release.sh 0.2.0
+```
+
+This bumps the version in `package.json`, `tauri.conf.json` and `Cargo.toml`,
+commits, tags `v0.2.0` and pushes. The [release workflow](.github/workflows/release.yml)
+builds macOS (universal), Windows and Linux, signs the update bundles, and
+publishes them with `latest.json` to this repo's Releases.
+
+Repo secrets used by the workflow: `TAURI_SIGNING_PRIVATE_KEY` (contents of
+`.secrets/updater.key`) and `TAURI_SIGNING_PRIVATE_KEY_PASSWORD` (contents of
+`.secrets/updater.key.password`).
+
+Keep `.secrets/updater.key` backed up: if it's lost, installed apps can't accept
+updates signed with a new key and have to be reinstalled by hand.
 
 ## Using it
 
@@ -73,7 +117,8 @@ ln -s "$PWD/.claude/skills/md-style" ~/.claude/skills/md-style
 ```
 
 Config lookup order: `$GMD_CONFIG_DIR`, then the repo `config/` recorded at
-build time, then built-in defaults (with a banner).
+build time, then the per-user config dir (created from the defaults), then
+built-in defaults (with a banner).
 
 ## Saving
 

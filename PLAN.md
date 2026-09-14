@@ -1,4 +1,4 @@
-# green_markdown_viewer — Plan
+# Green Markdown — Plan
 
 A lightweight, Typora-style desktop app for viewing and editing `.md` files,
 mainly on macOS but also running on Windows and Linux. All styling and editor
@@ -66,7 +66,7 @@ Linux. It needs the Rust toolchain (`brew install rustup && rustup default stabl
 The config lives in the repo so it's the same on every machine:
 
 ```
-green_markdown_viewer/config/
+config/
 ├── settings.json              # editor + app behavior (schema-validated)
 └── theme.css                  # active theme — CSS variables + overrides
 ```
@@ -175,7 +175,7 @@ Details:
 
 ### Layout
 ```
-green_markdown_viewer/
+green-markdown/
 ├── README.md
 ├── PLAN.md
 ├── package.json / vite.config.ts / tsconfig.json

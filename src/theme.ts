@@ -8,7 +8,7 @@ import { type Appearance, parseSettings, type Settings } from "./settings";
 
 interface ConfigInfo {
   dir: string | null;
-  source: "env" | "repo" | "defaults";
+  source: "env" | "repo" | "user" | "defaults";
   settings: string | null;
 }
 

@@ -3,6 +3,7 @@
 
 mod config;
 mod fsio;
+mod update;
 
 use std::collections::HashMap;
 use std::fs;
@@ -26,9 +27,9 @@ const CASCADE_OFFSET: f64 = 28.0;
 static WINDOW_COUNTER: AtomicUsize = AtomicUsize::new(1);
 
 #[derive(Default)]
-struct Doc {
+pub(crate) struct Doc {
     path: Option<PathBuf>,
-    dirty: bool,
+    pub(crate) dirty: bool,
     watcher: Option<fsio::Watcher>,
 }
 
@@ -41,8 +42,8 @@ struct Geometry {
 }
 
 #[derive(Default)]
-struct AppState {
-    docs: Mutex<HashMap<String, Doc>>,
+pub(crate) struct AppState {
+    pub(crate) docs: Mutex<HashMap<String, Doc>>,
     geometry: Mutex<Option<Geometry>>,
     config_watcher: Mutex<Option<fsio::Watcher>>,
 }
@@ -307,7 +308,7 @@ fn focused_window(app: &AppHandle) -> Option<WebviewWindow> {
 
 /// Quits right away if nothing is unsaved; otherwise asks every window to
 /// close so dirty ones can prompt (the app exits when the last one closes).
-fn request_quit(app: &AppHandle) {
+pub(crate) fn request_quit(app: &AppHandle) {
     let any_dirty = app
         .state::<AppState>()
         .docs
@@ -357,6 +358,7 @@ fn build_menu(app: &AppHandle) -> tauri::Result<Menu<tauri::Wry>> {
         Some("CmdOrCtrl+Q"),
     )?;
     let sep = || PredefinedMenuItem::separator(app);
+    let update = MenuItem::with_id(app, "update", "Check for Updates…", true, None::<&str>)?;
     let about = || {
         PredefinedMenuItem::about(
             app,
@@ -421,6 +423,7 @@ fn build_menu(app: &AppHandle) -> tauri::Result<Menu<tauri::Wry>> {
             true,
             &[
                 &about()?,
+                &update,
                 &sep()?,
                 &config_dir,
                 &sep()?,
@@ -471,7 +474,7 @@ fn build_menu(app: &AppHandle) -> tauri::Result<Menu<tauri::Wry>> {
                 &quit,
             ],
         )?;
-        let help = Submenu::with_items(app, "Help", true, &[&about()?])?;
+        let help = Submenu::with_items(app, "Help", true, &[&about()?, &update])?;
         Menu::with_items(app, &[&file, &edit, &view, &help])
     }
 }
@@ -512,6 +515,7 @@ fn handle_menu(app: &AppHandle, id: &str) {
             }
         }
         "quit" => request_quit(app),
+        "update" => update::start(app),
         _ => {}
     }
 }
@@ -526,6 +530,7 @@ pub fn run() {
 
     #[cfg(desktop)]
     {
+        builder = builder.plugin(tauri_plugin_updater::Builder::new().build());
         builder = builder.plugin(tauri_plugin_single_instance::init(|app, argv, cwd| {
             let paths = cli_paths(argv.into_iter().skip(1), Some(Path::new(&cwd)));
             if paths.is_empty() {

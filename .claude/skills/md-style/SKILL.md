@@ -11,8 +11,8 @@ there is no rebuild or restart.
 
 | File | Controls |
 |------|----------|
-| `green_markdown_viewer/config/theme.css` | Everything visual: CSS variables + optional override rules |
-| `green_markdown_viewer/config/settings.json` | Behavior: appearance mode, editor options, which theme file |
+| `config/theme.css` | Everything visual: CSS variables + optional override rules |
+| `config/settings.json` | Behavior: appearance mode, editor options, which theme file |
 
 A built app finds `config/` in the checkout it was built from (or
 `$GMD_CONFIG_DIR` if set). The File/app menu has **Open Config Folder**.
@@ -122,5 +122,5 @@ Custom rule example (bottom of theme.css):
 ## Verifying
 
 The app shows a banner for invalid settings or a missing theme file. If you
-can't see the app, run `npm test` in `green_markdown_viewer/` — it fails if
+can't see the app, run `npm test` in the repo root — it fails if
 `config/settings.json` has warnings.

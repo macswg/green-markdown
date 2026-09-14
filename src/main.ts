@@ -681,6 +681,10 @@ async function main(): Promise<void> {
     if (payload === "toggle_outline") toggleOutline();
     if (payload === "toggle_source") serially(toggleSourceMode);
   });
+  await appWindow.listen<string>("update-progress", ({ payload }) => {
+    if (payload) showBanner(payload);
+    else hideBanner();
+  });
   await appWindow.listen("file-changed", () => serially(onFileChanged));
   await appWindow.listen("load-file", () => serially(loadWindowFile));
   await appWindow.listen("config-changed", () => serially(onConfigChanged));

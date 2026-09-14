@@ -44,6 +44,19 @@
         "role": "Editor",
         "mimeType": "text/markdown"
       }
-    ]
+    ],
+    "createUpdaterArtifacts": true,
+    "macOS": {
+      "signingIdentity": "-",
+      "minimumSystemVersion": "11.0"
+    }
+  },
+  "plugins": {
+    "updater": {
+      "pubkey": "dW50cnVzdGVkIGNvbW1lbnQ6IG1pbmlzaWduIHB1YmxpYyBrZXk6IDI0ODFGNDdEQjMyRDQ0RDYKUldUV1JDMnpmZlNCSlBDZWZTTHBMOWJqT0lQWWhGdTVkNzhLRFFlazVWaXBsU2ZzQzVMWjFxNjQK",
+      "endpoints": [
+        "https://github.com/macswg/green-markdown/releases/latest/download/latest.json"
+      ]
+    }
   }
 }

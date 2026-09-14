@@ -1,0 +1,24 @@
+<!doctype html>
+<html lang="en" data-appearance="light">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Green Markdown</title>
+    <script type="module" src="/src/main.ts"></script>
+  </head>
+  <body>
+    <div id="banner" class="gmd-banner" role="status" hidden>
+      <span class="gmd-banner-text"></span>
+      <span class="gmd-banner-actions"></span>
+    </div>
+    <main id="scroller" class="gmd-scroller">
+      <div class="gmd-page">
+        <details id="frontmatter" class="gmd-frontmatter" hidden>
+          <summary>Front matter</summary>
+          <textarea spellcheck="false" aria-label="Front matter"></textarea>
+        </details>
+        <div id="editor" class="gmd-editor"></div>
+      </div>
+    </main>
+  </body>
+</html>

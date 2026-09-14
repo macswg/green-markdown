@@ -1,0 +1,13 @@
+{
+  "$schema": "../settings.schema.json",
+  "theme": "theme.css",
+  "appearance": "system",
+  "editor": {
+    "spellcheck": true,
+    "bulletChar": "auto",
+    "hardBreak": "auto",
+    "blockHandle": true,
+    "selectionToolbar": true,
+    "placeholder": "Start writing…"
+  }
+}

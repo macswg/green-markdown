@@ -1,0 +1,17 @@
+# The root .gitignore's `*-*.json` rule would hide the lockfile.
+!package-lock.json
+
+# Dependencies and build output
+node_modules
+dist
+dist-ssr
+*.local
+
+# Logs
+*.log
+
+# Editor / OS
+.vscode/*
+!.vscode/extensions.json
+.idea
+.DS_Store

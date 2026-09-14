@@ -1,0 +1,56 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "Green Markdown settings",
+  "description": "config/settings.json — hot-reloaded by every open window. Keep in sync with src/settings.ts.",
+  "type": "object",
+  "additionalProperties": false,
+  "properties": {
+    "$schema": { "type": "string" },
+    "theme": {
+      "type": "string",
+      "default": "theme.css",
+      "description": "CSS file inside the config dir to use as the theme, e.g. \"theme.css\" or \"themes/serif.css\"."
+    },
+    "appearance": {
+      "enum": ["system", "light", "dark"],
+      "default": "system",
+      "description": "Light/dark mode. \"system\" follows the OS."
+    },
+    "editor": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "spellcheck": {
+          "type": "boolean",
+          "default": true,
+          "description": "Underline misspelled words."
+        },
+        "bulletChar": {
+          "enum": ["auto", "-", "*", "+"],
+          "default": "auto",
+          "description": "Bullet marker written on save. \"auto\" reuses the marker most common in the file (\"-\" for new files)."
+        },
+        "hardBreak": {
+          "enum": ["auto", "spaces", "backslash"],
+          "default": "auto",
+          "description": "How Shift+Enter line breaks are written: two trailing spaces or a trailing backslash. \"auto\" reuses the file's existing style (spaces for new files)."
+        },
+        "blockHandle": {
+          "type": "boolean",
+          "default": true,
+          "description": "Show the +/drag handle beside blocks and the \"/\" command menu."
+        },
+        "selectionToolbar": {
+          "type": "boolean",
+          "default": true,
+          "description": "Show the formatting toolbar when text is selected."
+        },
+        "placeholder": {
+          "type": "string",
+          "default": "Start writing…",
+          "description": "Hint text shown in an empty document."
+        }
+      }
+    }
+  }
+}

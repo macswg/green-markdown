@@ -1,0 +1,317 @@
+/*
+ * App layout and the bridge from --gmd-* theme variables to the editor.
+ * Visual choices belong in config/theme.css; this file only wires them up.
+ */
+
+html,
+body {
+  height: 100%;
+  margin: 0;
+  background: var(--gmd-bg);
+  color: var(--gmd-text);
+  color-scheme: light;
+}
+
+:root[data-appearance="dark"],
+:root[data-appearance="dark"] body {
+  color-scheme: dark;
+}
+
+body {
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  font-family: var(--gmd-font-body);
+  -webkit-font-smoothing: antialiased;
+}
+
+.gmd-scroller {
+  flex: 1;
+  overflow-y: auto;
+  position: relative;
+}
+
+.gmd-page {
+  min-height: 100%;
+}
+
+/* ---- Banner -------------------------------------------------------------- */
+
+.gmd-banner {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  flex-wrap: wrap;
+  padding: 8px 16px;
+  font-size: 13px;
+  line-height: 1.4;
+  background: var(--gmd-accent-soft);
+  color: var(--gmd-text);
+  border-bottom: 1px solid var(--gmd-border);
+}
+
+.gmd-banner[hidden] {
+  display: none;
+}
+
+.gmd-banner-text {
+  flex: 1;
+  min-width: 200px;
+}
+
+.gmd-banner-actions {
+  display: flex;
+  gap: 8px;
+}
+
+.gmd-banner button {
+  font: inherit;
+  padding: 3px 10px;
+  border-radius: 5px;
+  border: 1px solid var(--gmd-border);
+  background: var(--gmd-surface);
+  color: var(--gmd-text);
+  cursor: pointer;
+}
+
+.gmd-banner button:hover {
+  background: var(--gmd-hover);
+}
+
+/* ---- Front matter -------------------------------------------------------- */
+
+.gmd-frontmatter {
+  box-sizing: content-box;
+  max-width: var(--gmd-content-width);
+  margin: 0 auto;
+  padding: 20px var(--gmd-page-padding-x) 0;
+  font-size: 13px;
+  color: var(--gmd-text-muted);
+}
+
+.gmd-frontmatter summary {
+  cursor: pointer;
+  user-select: none;
+  width: fit-content;
+}
+
+.gmd-frontmatter textarea {
+  display: block;
+  box-sizing: border-box;
+  width: 100%;
+  margin-top: 8px;
+  padding: 10px 12px;
+  resize: none;
+  overflow: hidden;
+  border: 1px solid var(--gmd-border);
+  border-radius: var(--gmd-radius);
+  background: var(--gmd-code-block-bg);
+  color: var(--gmd-code-text);
+  font-family: var(--gmd-font-mono);
+  font-size: 13px;
+  line-height: 1.5;
+  outline: none;
+}
+
+.gmd-frontmatter:not([hidden]) + .gmd-editor .milkdown .ProseMirror {
+  padding-top: 24px;
+}
+
+/* ---- Editor: map theme variables onto Crepe's --------------------------- */
+
+.milkdown {
+  --crepe-color-background: var(--gmd-bg);
+  --crepe-color-on-background: var(--gmd-text);
+  --crepe-color-surface: var(--gmd-surface);
+  --crepe-color-surface-low: var(--gmd-surface-low);
+  --crepe-color-on-surface: var(--gmd-text);
+  --crepe-color-on-surface-variant: var(--gmd-text-muted);
+  --crepe-color-outline: var(--gmd-text-muted);
+  --crepe-color-primary: var(--gmd-accent);
+  --crepe-color-secondary: var(--gmd-accent-soft);
+  --crepe-color-on-secondary: var(--gmd-text);
+  --crepe-color-inverse: var(--gmd-text);
+  --crepe-color-on-inverse: var(--gmd-bg);
+  --crepe-color-inline-code: var(--gmd-inline-code-color);
+  --crepe-color-error: #d1242f;
+  --crepe-color-hover: var(--gmd-hover);
+  --crepe-color-selected: var(--gmd-selection);
+  --crepe-color-inline-area: var(--gmd-code-bg);
+  --crepe-base-font-size: var(--gmd-font-size);
+  --crepe-font-title: var(--gmd-font-heading);
+  --crepe-font-default: var(--gmd-font-body);
+  --crepe-font-code: var(--gmd-font-mono);
+  --crepe-shadow-1: 0 1px 3px rgba(0, 0, 0, 0.12), 0 1px 2px rgba(0, 0, 0, 0.18);
+  --crepe-shadow-2: 0 4px 14px rgba(0, 0, 0, 0.14), 0 1px 3px rgba(0, 0, 0, 0.16);
+}
+
+/* ---- Editor: document typography ---------------------------------------- */
+
+.milkdown .ProseMirror {
+  box-sizing: content-box;
+  max-width: var(--gmd-content-width);
+  margin: 0 auto;
+  padding: var(--gmd-page-padding-top) var(--gmd-page-padding-x) var(--gmd-page-padding-bottom);
+  font-family: var(--gmd-font-body);
+  font-size: var(--gmd-font-size);
+  line-height: var(--gmd-line-height);
+  color: var(--gmd-text);
+  word-wrap: break-word;
+}
+
+/* The virtual cursor element can precede the first real block. */
+.milkdown .ProseMirror > :first-child,
+.milkdown .ProseMirror > .prosemirror-virtual-cursor:first-child + * {
+  margin-top: 0;
+}
+
+.milkdown .ProseMirror p {
+  line-height: var(--gmd-line-height);
+  padding: 0;
+  margin: 0 0 var(--gmd-paragraph-spacing);
+}
+
+.milkdown .ProseMirror li p,
+.milkdown .ProseMirror td p,
+.milkdown .ProseMirror th p,
+.milkdown .ProseMirror blockquote p:last-child {
+  margin: 0;
+}
+
+.milkdown .ProseMirror h1,
+.milkdown .ProseMirror h2,
+.milkdown .ProseMirror h3,
+.milkdown .ProseMirror h4,
+.milkdown .ProseMirror h5,
+.milkdown .ProseMirror h6 {
+  font-family: var(--gmd-font-heading);
+  font-weight: var(--gmd-heading-weight);
+  line-height: var(--gmd-heading-line-height);
+  color: var(--gmd-heading-color);
+  margin: var(--gmd-heading-spacing-top) 0 var(--gmd-heading-spacing-bottom);
+  padding: 0;
+}
+
+.milkdown .ProseMirror h1 {
+  font-size: var(--gmd-h1-size);
+  border-bottom: var(--gmd-h1-border);
+}
+.milkdown .ProseMirror h2 {
+  font-size: var(--gmd-h2-size);
+  border-bottom: var(--gmd-h2-border);
+}
+.milkdown .ProseMirror h1,
+.milkdown .ProseMirror h2 {
+  padding-bottom: 0.2em;
+}
+.milkdown .ProseMirror h3 {
+  font-size: var(--gmd-h3-size);
+}
+.milkdown .ProseMirror h4 {
+  font-size: var(--gmd-h4-size);
+}
+.milkdown .ProseMirror h5 {
+  font-size: var(--gmd-h5-size);
+}
+.milkdown .ProseMirror h6 {
+  font-size: var(--gmd-h6-size);
+  color: var(--gmd-text-muted);
+}
+
+.milkdown .ProseMirror a {
+  color: var(--gmd-link-color);
+  text-decoration: var(--gmd-link-decoration);
+  text-underline-offset: 0.18em;
+  text-decoration-thickness: 1px;
+}
+
+.milkdown .ProseMirror code {
+  display: inline;
+  font-family: var(--gmd-font-mono);
+  font-size: var(--gmd-code-font-size);
+  line-height: inherit;
+  color: var(--gmd-inline-code-color);
+  background: var(--gmd-code-bg);
+  padding: 0.12em 0.35em;
+  border-radius: 4px;
+}
+
+.milkdown .ProseMirror blockquote {
+  margin: 0 0 var(--gmd-paragraph-spacing);
+  padding: 0 0 0 1.1em;
+  color: var(--gmd-blockquote-text);
+  font-style: var(--gmd-blockquote-style);
+}
+
+.milkdown .ProseMirror blockquote::before {
+  width: 3px;
+  top: 0.2em;
+  bottom: 0.2em;
+  background: var(--gmd-blockquote-border);
+}
+
+.milkdown .ProseMirror hr {
+  margin: 1.4em 0;
+  background-color: var(--gmd-hr-color);
+}
+
+.milkdown .ProseMirror img {
+  max-width: 100%;
+  border-radius: var(--gmd-radius);
+}
+
+.milkdown .ProseMirror ul,
+.milkdown .ProseMirror ol {
+  margin: 0 0 var(--gmd-paragraph-spacing);
+}
+
+.milkdown .ProseMirror li ul,
+.milkdown .ProseMirror li ol {
+  margin-bottom: 0;
+}
+
+.milkdown .milkdown-list-item-block li .label-wrapper {
+  height: calc(var(--gmd-font-size) * var(--gmd-line-height));
+}
+
+.milkdown .milkdown-list-item-block li .label-wrapper .label {
+  height: auto;
+  padding: 0;
+}
+
+.milkdown .milkdown-code-block {
+  margin: 0 0 var(--gmd-paragraph-spacing);
+  padding: 6px 16px 12px;
+  border-radius: var(--gmd-radius);
+  background: var(--gmd-code-block-bg);
+}
+
+.milkdown .milkdown-code-block .cm-editor,
+.milkdown .milkdown-code-block .cm-gutters {
+  background: transparent;
+}
+
+.milkdown .milkdown-code-block .cm-scroller {
+  font-family: var(--gmd-font-mono);
+  font-size: var(--gmd-code-font-size);
+  line-height: 1.55;
+}
+
+.milkdown .milkdown-table-block {
+  margin: 0 0 var(--gmd-paragraph-spacing);
+}
+
+.milkdown .milkdown-table-block th,
+.milkdown .milkdown-table-block td {
+  border: 1px solid var(--gmd-table-border);
+  padding: 6px 12px;
+}
+
+.milkdown .milkdown-table-block th {
+  background: var(--gmd-table-header-bg);
+  font-weight: 600;
+}
+
+.milkdown .milkdown-table-block tr:nth-child(even) td {
+  background: var(--gmd-table-stripe);
+}

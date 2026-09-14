@@ -40,7 +40,7 @@ repo's config (sync it with git).
 
 ### Installing a release instead
 
-Download `Green_Markdown_universal.app.tar.gz` (or the `.msi`/`.AppImage`) from
+Download `Green.Markdown_aarch64.app.tar.gz` (Apple Silicon) from
 [Releases](https://github.com/macswg/green-markdown/releases).
 On macOS, unpack it into `/Applications` and clear the download quarantine once
 (the app is ad-hoc signed, not notarized):
@@ -71,7 +71,7 @@ scripts/release.sh 0.2.0
 
 This bumps the version in `package.json`, `tauri.conf.json` and `Cargo.toml`,
 commits, tags `v0.2.0` and pushes. The [release workflow](.github/workflows/release.yml)
-builds macOS (universal), Windows and Linux, signs the update bundles, and
+builds macOS for Apple Silicon, signs the update bundles, and
 publishes them with `latest.json` to this repo's Releases.
 
 Repo secrets used by the workflow: `TAURI_SIGNING_PRIVATE_KEY` (contents of

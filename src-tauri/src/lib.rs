@@ -11,7 +11,7 @@ use std::sync::atomic::{AtomicUsize, Ordering};
 use std::sync::Mutex;
 
 use serde::{Deserialize, Serialize};
-use tauri::menu::{Menu, MenuItem, PredefinedMenuItem, Submenu};
+use tauri::menu::{AboutMetadata, Menu, MenuItem, PredefinedMenuItem, Submenu};
 use tauri::{
     AppHandle, Emitter, LogicalPosition, LogicalSize, Manager, RunEvent, State, WebviewUrl,
     WebviewWindow, WebviewWindowBuilder, WindowEvent,
@@ -357,6 +357,41 @@ fn build_menu(app: &AppHandle) -> tauri::Result<Menu<tauri::Wry>> {
         Some("CmdOrCtrl+Q"),
     )?;
     let sep = || PredefinedMenuItem::separator(app);
+    let about = || {
+        PredefinedMenuItem::about(
+            app,
+            None,
+            Some(AboutMetadata {
+                authors: Some(vec!["Sean W. Green".into()]),
+                copyright: Some("© Sean W. Green".into()),
+                ..Default::default()
+            }),
+        )
+    };
+
+    let find = MenuItem::with_id(app, "find", "Find…", true, Some("CmdOrCtrl+F"))?;
+    let find_next = MenuItem::with_id(app, "find_next", "Find Next", true, Some("CmdOrCtrl+G"))?;
+    let find_prev = MenuItem::with_id(
+        app,
+        "find_prev",
+        "Find Previous",
+        true,
+        Some("CmdOrCtrl+Shift+G"),
+    )?;
+    let outline = MenuItem::with_id(
+        app,
+        "toggle_outline",
+        "Toggle Outline",
+        true,
+        Some("CmdOrCtrl+Shift+O"),
+    )?;
+    let source = MenuItem::with_id(
+        app,
+        "toggle_source",
+        "Toggle Source Mode",
+        true,
+        Some("CmdOrCtrl+/"),
+    )?;
 
     let edit = Submenu::with_items(
         app,
@@ -370,8 +405,13 @@ fn build_menu(app: &AppHandle) -> tauri::Result<Menu<tauri::Wry>> {
             &PredefinedMenuItem::copy(app, None)?,
             &PredefinedMenuItem::paste(app, None)?,
             &PredefinedMenuItem::select_all(app, None)?,
+            &sep()?,
+            &find,
+            &find_next,
+            &find_prev,
         ],
     )?;
+    let view = Submenu::with_items(app, "View", true, &[&outline, &source])?;
 
     #[cfg(target_os = "macos")]
     {
@@ -380,7 +420,7 @@ fn build_menu(app: &AppHandle) -> tauri::Result<Menu<tauri::Wry>> {
             "Green Markdown",
             true,
             &[
-                &PredefinedMenuItem::about(app, None, None)?,
+                &about()?,
                 &sep()?,
                 &config_dir,
                 &sep()?,
@@ -409,7 +449,7 @@ fn build_menu(app: &AppHandle) -> tauri::Result<Menu<tauri::Wry>> {
                 &PredefinedMenuItem::fullscreen(app, None)?,
             ],
         )?;
-        Menu::with_items(app, &[&app_menu, &file, &edit, &window])
+        Menu::with_items(app, &[&app_menu, &file, &edit, &view, &window])
     }
 
     #[cfg(not(target_os = "macos"))]
@@ -431,7 +471,8 @@ fn build_menu(app: &AppHandle) -> tauri::Result<Menu<tauri::Wry>> {
                 &quit,
             ],
         )?;
-        Menu::with_items(app, &[&file, &edit])
+        let help = Submenu::with_items(app, "Help", true, &[&about()?])?;
+        Menu::with_items(app, &[&file, &edit, &view, &help])
     }
 }
 
@@ -454,7 +495,8 @@ fn handle_menu(app: &AppHandle, id: &str) {
                     open_all(&handle, paths, reuse);
                 });
         }
-        "save" | "save_as" => {
+        "save" | "save_as" | "find" | "find_next" | "find_prev" | "toggle_outline"
+        | "toggle_source" => {
             if let Some(window) = focused_window(app) {
                 let _ = window.emit_to(window.label(), "menu", id);
             }

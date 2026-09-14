@@ -18,6 +18,7 @@
   --gmd-font-size: 16px;
   --gmd-line-height: 1.7;
   --gmd-code-font-size: 0.875em;
+  --gmd-source-font-size: 14px;
   --gmd-paragraph-spacing: 0.85em;
 
   /* ---- Page layout ----------------------------------------------------- */
@@ -26,6 +27,9 @@
   --gmd-page-padding-top: 56px;
   --gmd-page-padding-bottom: 40vh;
   --gmd-radius: 6px;
+  /* Block handle (+ and drag dots) beside the hovered block */
+  --gmd-handle-size: 16px;
+  --gmd-handle-opacity: 0.45;
 
   /* ---- Headings -------------------------------------------------------- */
   --gmd-heading-weight: 650;
@@ -69,6 +73,9 @@
   --gmd-table-header-bg: #f3f4f3;
   --gmd-table-stripe: #fafaf9;
   --gmd-hr-color: #d8dee4;
+  --gmd-find-match: #fbe89a;
+  --gmd-find-current: #f5b93d;
+  --gmd-outline-width: 240px;
 
   /* Syntax highlighting in code blocks */
   --gmd-syntax-keyword: #cf222e;
@@ -85,7 +92,7 @@
 
 /* ---- Colors: dark ------------------------------------------------------ */
 :root[data-appearance="dark"] {
-  --gmd-bg: #1a1c1e;
+  --gmd-bg: #0d0e0f;
   --gmd-text: #d5d9dd;
   --gmd-text-muted: #8b949e;
   --gmd-heading-color: #eef1f3;
@@ -98,15 +105,17 @@
   --gmd-hover: #30353a;
   --gmd-selection: #2f5a41;
   --gmd-code-bg: #2a2e32;
-  --gmd-code-block-bg: #212427;
+  --gmd-code-block-bg: #17191b;
   --gmd-code-text: #d5d9dd;
   --gmd-inline-code-color: #f0a5ab;
   --gmd-blockquote-border: #3d5a48;
   --gmd-blockquote-text: #9da5ae;
   --gmd-table-border: #33383d;
-  --gmd-table-header-bg: #23272a;
-  --gmd-table-stripe: #1e2123;
+  --gmd-table-header-bg: #1a1d20;
+  --gmd-table-stripe: #121416;
   --gmd-hr-color: #33383d;
+  --gmd-find-match: #5a4a16;
+  --gmd-find-current: #9a6b12;
 
   --gmd-syntax-keyword: #ff7b72;
   --gmd-syntax-string: #a5d6ff;

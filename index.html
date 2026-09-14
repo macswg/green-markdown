@@ -11,14 +11,31 @@
       <span class="gmd-banner-text"></span>
       <span class="gmd-banner-actions"></span>
     </div>
-    <main id="scroller" class="gmd-scroller">
-      <div class="gmd-page">
-        <details id="frontmatter" class="gmd-frontmatter" hidden>
-          <summary>Front matter</summary>
-          <textarea spellcheck="false" aria-label="Front matter"></textarea>
-        </details>
-        <div id="editor" class="gmd-editor"></div>
-      </div>
-    </main>
+    <div id="findbar" class="gmd-findbar" hidden>
+      <input type="search" placeholder="Find" aria-label="Find" spellcheck="false" />
+      <label class="gmd-find-case" title="Match case">
+        <input type="checkbox" /><span>Aa</span>
+      </label>
+      <span class="gmd-find-count" aria-live="polite"></span>
+      <button type="button" data-find="prev" title="Previous (⇧↵)" aria-label="Previous match">↑</button>
+      <button type="button" data-find="next" title="Next (↵)" aria-label="Next match">↓</button>
+      <button type="button" data-find="close" title="Close (Esc)" aria-label="Close find">✕</button>
+    </div>
+    <div class="gmd-workspace">
+      <nav id="outline" class="gmd-outline" aria-label="Outline" hidden>
+        <div class="gmd-outline-title">Outline</div>
+        <ul></ul>
+      </nav>
+      <main id="scroller" class="gmd-scroller">
+        <div id="page" class="gmd-page">
+          <details id="frontmatter" class="gmd-frontmatter" hidden>
+            <summary>Front matter</summary>
+            <textarea spellcheck="false" aria-label="Front matter"></textarea>
+          </details>
+          <div id="editor" class="gmd-editor"></div>
+        </div>
+        <div id="source" class="gmd-source" hidden></div>
+      </main>
+    </div>
   </body>
 </html>

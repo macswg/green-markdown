@@ -45,6 +45,9 @@ Build on each machine you use it on. The build records that checkout's
 | New / Save / Save As / Close | ⌘N / ⌘S / ⇧⌘S / ⌘W (Ctrl on Windows/Linux) |
 | Follow a link | ⌘-click (Ctrl-click). Relative `.md` links open in a new window |
 | Block menu | Type `/` on an empty line, or use the `+`/drag handle at the left |
+| Find | ⌘F, then ↵ / ⇧↵ (or ⌘G / ⇧⌘G) for next/previous, Esc to close. `Aa` matches case |
+| Outline | ⇧⌘O (View → Toggle Outline) shows a heading sidebar; click to jump |
+| Source mode | ⌘/ (View → Toggle Source Mode), or "Source mode" in the `/` menu. Edits the raw file, front matter included, byte-for-byte |
 | Front matter | YAML/TOML front matter appears as a collapsible raw block at the top |
 | Config folder | App menu (macOS) / File menu → Open Config Folder |
 
@@ -103,7 +106,10 @@ Layout:
 
 ```
 src/            frontend (TypeScript, no framework)
-  main.ts       window controller: load, save, conflicts, links, events
+  main.ts       window controller: load, save, conflicts, modes, find, outline
+  find.ts       find for both editors (ProseMirror plugin + CodeMirror field)
+  outline.ts    heading extraction and the outline sidebar
+  source.ts     source mode (CodeMirror over the raw file)
   editor.ts     Crepe setup, serializer options, bodyToSave
   preserve.ts   minimal-diff merge
   markdown.ts   front matter/EOL splitting, style detection, path resolution
@@ -120,6 +126,7 @@ tests/          vitest suites and markdown fixtures
 - Raw HTML blocks show as source text instead of rendering.
 - Pasting or dropping image files is ignored (Phase 2: save into `./assets/`).
   Existing images, relative or absolute, display normally.
-- No source mode, outline, or find yet (Phase 2).
+- Find highlights don't show inside code blocks in rich mode (the match is
+  still selected); use source mode for those. No replace yet.
 - On Windows, the file-drop handler disables dragging blocks by their handle.
 - Math and Mermaid are intentionally off.

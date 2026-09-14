@@ -19,6 +19,9 @@ import { parserCtx, remarkStringifyOptionsCtx, serializerCtx } from "@milkdown/k
 import { uploadConfig } from "@milkdown/kit/plugin/upload";
 import { imageSchema } from "@milkdown/kit/preset/commonmark";
 import { $view } from "@milkdown/kit/utils";
+import { clearTextInCurrentBlockCommand } from "@milkdown/kit/preset/commonmark";
+import { commandsCtx } from "@milkdown/kit/core";
+import { proseFindPlugin } from "./find";
 import type { Bullet, DocStyle, HardBreak, Rule } from "./markdown";
 import { preserveUnchanged } from "./preserve";
 import type { EditorSettings } from "./settings";
@@ -34,6 +37,8 @@ export interface EditorOptions {
   /** Maps an image `src` from the markdown to a URL the webview can load. */
   resolveImage?: (src: string) => string;
   onChange?: (markdown: string) => void;
+  /** Adds a "Source mode" entry to the `/` block menu. */
+  onSourceMode?: () => void;
   /** Syntax-highlighting grammars for code blocks (omitted in tests). */
   languages?: LanguageDescription[];
 }
@@ -74,7 +79,7 @@ export async function createEditor(options: EditorOptions): Promise<Editor> {
     ctx.update(uploadConfig.key, (prev) => ({ ...prev, uploader: async () => [] }));
   });
 
-  crepe.editor.use(imageView(options.resolveImage ?? ((src) => src)));
+  crepe.editor.use(imageView(options.resolveImage ?? ((src) => src))).use(proseFindPlugin);
 
   crepe
     .addFeature(listItem)
@@ -83,7 +88,22 @@ export async function createEditor(options: EditorOptions): Promise<Editor> {
     .addFeature(table)
     .addFeature(codeMirror, { languages: options.languages ?? [], theme: codeTheme })
     .addFeature(placeholder, { text: settings.placeholder, mode: "doc" });
-  if (settings.blockHandle) crepe.addFeature(blockEdit);
+  const onSourceMode = options.onSourceMode;
+  if (settings.blockHandle) {
+    crepe.addFeature(blockEdit, {
+      buildMenu: (builder) => {
+        if (!onSourceMode) return;
+        builder.addGroup("view", "View").addItem("source-mode", {
+          label: "Source mode",
+          icon: SOURCE_ICON,
+          onRun: (ctx) => {
+            ctx.get(commandsCtx).call(clearTextInCurrentBlockCommand.key);
+            onSourceMode();
+          },
+        });
+      },
+    });
+  }
   if (settings.selectionToolbar) crepe.addFeature(toolbar);
 
   if (options.onChange) {
@@ -113,6 +133,9 @@ export function bodyToSave(editor: Editor, originalBody: string): string {
   if (merged === current) return current;
   return reserialize(editor, merged) === reserialize(editor, current) ? merged : current;
 }
+
+const SOURCE_ICON =
+  '<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="16 18 22 12 16 6"/><polyline points="8 6 2 12 8 18"/></svg>';
 
 /** Renders images through `resolve` so relative paths load from disk. */
 function imageView(resolve: (src: string) => string) {

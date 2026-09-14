@@ -138,8 +138,8 @@ Details:
 - Window size and position are remembered.
 
 ### Phase 2: Editing polish
-- Source mode toggle (⌘/) using CodeMirror 6.
-- Outline/TOC sidebar (toggle), find (⌘F).
+- ✅ Source mode toggle (⌘/) using CodeMirror 6.
+- ✅ Outline/TOC sidebar (⇧⌘O), find (⌘F).
 - Paste an image, save it to `./assets/` next to the file, and insert a relative link.
 - Show a diff in the conflict banner. Optional autosave. Recent-files menu.
 - Round-trip fixture tests expanded with real files from this repo.

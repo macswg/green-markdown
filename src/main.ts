@@ -20,7 +20,12 @@ import { getCurrentWebview } from "@tauri-apps/api/webview";
 import { getCurrentWindow } from "@tauri-apps/api/window";
 import { message, save as saveDialog } from "@tauri-apps/plugin-dialog";
 import { openUrl } from "@tauri-apps/plugin-opener";
+import { EditorView as SourceView } from "@codemirror/view";
+import { editorViewCtx } from "@milkdown/kit/core";
+import { TextSelection } from "@milkdown/kit/prose/state";
+import type { EditorView as ProseView } from "@milkdown/kit/prose/view";
 import { bodyToSave, createEditor, type Editor, resolveStyle } from "./editor";
+import { cmFindable, type Findable, type FindStatus, proseFindable } from "./find";
 import {
   type DocParts,
   detectStyle,
@@ -31,12 +36,28 @@ import {
   resolveLocalPath,
   splitDocument,
 } from "./markdown";
+import {
+  type Heading,
+  proseHeadings,
+  renderOutline,
+  setActiveOutline,
+  sourceHeadings,
+} from "./outline";
 import type { Settings } from "./settings";
+import { createSourceEditor, fromSourceText, toSourceText } from "./source";
 import { applyAppearance, applyTheme, loadConfig } from "./theme";
 
 const appWindow = getCurrentWindow();
 const scroller = document.getElementById("scroller") as HTMLElement;
+const pageEl = document.getElementById("page") as HTMLElement;
 const editorRoot = document.getElementById("editor") as HTMLElement;
+const sourceRoot = document.getElementById("source") as HTMLElement;
+const outlineEl = document.getElementById("outline") as HTMLElement;
+const outlineList = outlineEl.querySelector("ul") as HTMLElement;
+const findbar = document.getElementById("findbar") as HTMLElement;
+const findInput = findbar.querySelector('input[type="search"]') as HTMLInputElement;
+const findCase = findbar.querySelector('input[type="checkbox"]') as HTMLInputElement;
+const findCount = findbar.querySelector(".gmd-find-count") as HTMLElement;
 const frontmatterBox = document.getElementById("frontmatter") as HTMLDetailsElement;
 const frontmatterInput = frontmatterBox.querySelector("textarea") as HTMLTextAreaElement;
 const banner = document.getElementById("banner") as HTMLElement;
@@ -71,6 +92,13 @@ let dirty = false;
 let forceDirty = false;
 let fileMissing = false;
 
+/** The source-mode editor while source mode is on. */
+let source: SourceView | null = null;
+/** Source text when source mode was entered (or last synced from disk). */
+let sourceEntryText = "";
+/** The rich editor no longer matches the document (disk reload, settings). */
+let richStale = false;
+
 // ---------------------------------------------------------------------------
 // Loading and editing
 // ---------------------------------------------------------------------------
@@ -87,11 +115,17 @@ async function mountEditor(body: string): Promise<void> {
     languages,
     resolveImage,
     onChange: () => updateDirty(),
+    onSourceMode: () => setTimeout(() => serially(enterSourceMode)),
   });
   editorRoot
     .querySelector(".ProseMirror")
     ?.setAttribute("spellcheck", String(settings.editor.spellcheck));
   scroller.scrollTop = scrollTop;
+  onViewReplaced();
+}
+
+function proseView(): ProseView | null {
+  return editor ? editor.editor.action((ctx) => ctx.get(editorViewCtx)) : null;
 }
 
 /** Shows `raw` file text as a clean (unmodified) document. */
@@ -101,8 +135,17 @@ async function showDocument(raw: string | null): Promise<void> {
   forceDirty = false;
   fileMissing = false;
   renderFrontmatter();
-  await mountEditor(doc.body);
-  baseline = editor!.getMarkdown();
+  if (source) {
+    // Keep editing in source mode; the rich editor is rebuilt on exit.
+    sourceEntryText = toSourceText(raw);
+    richStale = true;
+    source.dispatch({
+      changes: { from: 0, to: source.state.doc.length, insert: sourceEntryText },
+    });
+  } else {
+    await mountEditor(doc.body);
+    baseline = editor!.getMarkdown();
+  }
   setDirty(false);
   hideBanner();
   debug(`showing ${path ?? "untitled"} (${raw?.length ?? 0} chars)`);
@@ -129,10 +172,26 @@ function currentFrontmatter(): string | null {
 }
 
 function updateDirty(): void {
-  if (!editor) return;
-  setDirty(
-    forceDirty || editor.getMarkdown() !== baseline || currentFrontmatter() !== doc.frontmatter,
-  );
+  if (source) {
+    setDirty(sourceFileText() !== (diskText ?? ""));
+  } else if (editor) {
+    setDirty(
+      forceDirty || editor.getMarkdown() !== baseline || currentFrontmatter() !== doc.frontmatter,
+    );
+  }
+  scheduleOutline();
+  if (!findbar.hidden) showFindStatus(findable()?.status());
+}
+
+/** File text for the rich editor's current content. */
+function richFileText(): string {
+  const body = diskText === null ? editor!.getMarkdown() : bodyToSave(editor!, doc.body);
+  return joinDocument({ ...doc, frontmatter: currentFrontmatter(), body });
+}
+
+/** File text for the source editor's current content. */
+function sourceFileText(): string {
+  return fromSourceText(source!.state.doc.toString(), doc.bom, doc.eol);
 }
 
 function setDirty(value: boolean): void {
@@ -181,9 +240,7 @@ async function save(saveAs = false): Promise<boolean> {
   }
   if (!dirty && target === path && !fileMissing && diskText !== null) return true;
 
-  const body = diskText === null ? editor.getMarkdown() : bodyToSave(editor, doc.body);
-  const frontmatter = currentFrontmatter();
-  const text = joinDocument({ ...doc, frontmatter, body });
+  const text = source ? sourceFileText() : richFileText();
   try {
     await invoke("write_text", { path: target, contents: text });
   } catch (e) {
@@ -193,8 +250,13 @@ async function save(saveAs = false): Promise<boolean> {
 
   debug(`saved ${target} (${text.length} chars)`);
   diskText = text;
-  doc = { ...doc, frontmatter, body };
-  baseline = editor.getMarkdown();
+  if (source) {
+    richStale ||= source.state.doc.toString() !== sourceEntryText;
+    doc = splitDocument(text);
+  } else {
+    doc = { ...doc, frontmatter: currentFrontmatter(), body: splitDocument(text).body };
+    baseline = editor.getMarkdown();
+  }
   forceDirty = false;
   fileMissing = false;
   if (target !== path) {
@@ -263,7 +325,9 @@ async function onConfigChanged(): Promise<void> {
   showConfigWarnings();
   debug(`config reloaded (${config.warnings.length} warnings)`);
 
-  if (editor && JSON.stringify(settings.editor) !== previousEditor) {
+  if (source && JSON.stringify(settings.editor) !== previousEditor) {
+    richStale = true;
+  } else if (editor && JSON.stringify(settings.editor) !== previousEditor) {
     // Rebuild the editor with new options, keeping any unsaved edits.
     if (dirty) {
       const markdown = editor.getMarkdown();
@@ -275,6 +339,242 @@ async function onConfigChanged(): Promise<void> {
     }
     updateDirty();
   }
+}
+
+// ---------------------------------------------------------------------------
+// Source mode
+// ---------------------------------------------------------------------------
+
+async function toggleSourceMode(): Promise<void> {
+  await (source ? exitSourceMode() : enterSourceMode());
+}
+
+async function enterSourceMode(): Promise<void> {
+  if (!editor || source) return;
+  const raw = dirty || diskText === null ? richFileText() : diskText;
+  const ratio = scrollRatio();
+  sourceEntryText = toSourceText(raw);
+  richStale = false;
+  pageEl.hidden = true;
+  sourceRoot.hidden = false;
+  source = createSourceEditor({
+    root: sourceRoot,
+    text: sourceEntryText,
+    spellcheck: settings.editor.spellcheck,
+    languages,
+    onChange: () => updateDirty(),
+  });
+  setScrollRatio(ratio);
+  onViewReplaced();
+  updateDirty();
+  if (findbar.hidden) source.focus();
+  debug("source mode on");
+}
+
+async function exitSourceMode(): Promise<void> {
+  if (!source) return;
+  const text = source.state.doc.toString();
+  const changed = richStale || text !== sourceEntryText;
+  const raw = sourceFileText();
+  const ratio = scrollRatio();
+  source.destroy();
+  source = null;
+  sourceRoot.replaceChildren();
+  sourceRoot.hidden = true;
+  pageEl.hidden = false;
+
+  if (changed) {
+    // The rich editor is rebuilt from the source text; saving diffs against
+    // that text, so lines untouched since then keep their exact bytes.
+    doc = splitDocument(raw);
+    renderFrontmatter();
+    await mountEditor(doc.body);
+    baseline = editor!.getMarkdown();
+    forceDirty = raw !== (diskText ?? "");
+    richStale = false;
+  } else {
+    onViewReplaced();
+  }
+  setScrollRatio(ratio);
+  updateDirty();
+  if (findbar.hidden) proseView()?.focus();
+  debug("source mode off");
+}
+
+function scrollRatio(): number {
+  const max = scroller.scrollHeight - scroller.clientHeight;
+  return max > 0 ? scroller.scrollTop / max : 0;
+}
+
+function setScrollRatio(ratio: number): void {
+  requestAnimationFrame(() => {
+    scroller.scrollTop = ratio * (scroller.scrollHeight - scroller.clientHeight);
+  });
+}
+
+/** Re-attaches find and outline after the active editor changes. */
+function onViewReplaced(): void {
+  refreshOutline();
+  if (!findbar.hidden) runFind();
+}
+
+// ---------------------------------------------------------------------------
+// Find
+// ---------------------------------------------------------------------------
+
+function findable(): Findable | null {
+  if (source) return cmFindable(source);
+  if (editor) return proseFindable(() => proseView()!);
+  return null;
+}
+
+function openFind(): void {
+  findbar.hidden = false;
+  findInput.focus();
+  findInput.select();
+  if (findInput.value) runFind();
+}
+
+function closeFind(): void {
+  if (findbar.hidden) return;
+  findable()?.clear();
+  findbar.hidden = true;
+  if (source) source.focus();
+  else proseView()?.focus();
+}
+
+function runFind(): void {
+  const status = findable()?.setQuery({
+    text: findInput.value,
+    caseSensitive: findCase.checked,
+  });
+  showFindStatus(status);
+}
+
+function stepFind(direction: 1 | -1): void {
+  if (findbar.hidden) {
+    openFind();
+    return;
+  }
+  showFindStatus(findable()?.step(direction));
+}
+
+function showFindStatus(status: FindStatus | undefined): void {
+  const { count, current } = status ?? { count: 0, current: -1 };
+  const empty = findInput.value === "";
+  findCount.textContent = empty ? "" : count === 0 ? "No results" : `${current + 1} of ${count}`;
+  findbar.classList.toggle("no-match", !empty && count === 0);
+}
+
+findInput.addEventListener("input", runFind);
+findCase.addEventListener("change", () => {
+  runFind();
+  findInput.focus();
+});
+findInput.addEventListener("keydown", (event) => {
+  if (event.key === "Enter") {
+    event.preventDefault();
+    stepFind(event.shiftKey ? -1 : 1);
+  } else if (event.key === "Escape") {
+    event.preventDefault();
+    closeFind();
+  }
+});
+findbar.addEventListener("click", (event) => {
+  const action = (event.target as HTMLElement).closest("button")?.dataset.find;
+  if (action === "next") stepFind(1);
+  if (action === "prev") stepFind(-1);
+  if (action === "close") closeFind();
+});
+document.addEventListener("keydown", (event) => {
+  if (event.key === "Escape" && !findbar.hidden && !event.defaultPrevented) closeFind();
+});
+
+// ---------------------------------------------------------------------------
+// Outline
+// ---------------------------------------------------------------------------
+
+const OUTLINE_KEY = "gmd.outline";
+let headings: Heading[] = [];
+let outlineTimer: ReturnType<typeof setTimeout> | undefined;
+
+function toggleOutline(): void {
+  outlineEl.hidden = !outlineEl.hidden;
+  try {
+    localStorage.setItem(OUTLINE_KEY, outlineEl.hidden ? "0" : "1");
+  } catch {
+    // Storage unavailable; the choice just isn't remembered.
+  }
+  refreshOutline();
+}
+
+function scheduleOutline(): void {
+  if (outlineEl.hidden) return;
+  clearTimeout(outlineTimer);
+  outlineTimer = setTimeout(refreshOutline, 200);
+}
+
+function refreshOutline(): void {
+  if (outlineEl.hidden) return;
+  const view = source ? null : proseView();
+  headings = source ? sourceHeadings(source.state.doc.toString()) : view ? proseHeadings(view) : [];
+  renderOutline(outlineList, headings, jumpToHeading);
+  updateActiveHeading();
+}
+
+function jumpToHeading(heading: Heading): void {
+  if (source) {
+    source.dispatch({
+      selection: { anchor: heading.pos },
+      effects: SourceView.scrollIntoView(heading.pos, { y: "start", yMargin: 24 }),
+    });
+    source.focus();
+    return;
+  }
+  const view = proseView();
+  if (!view) return;
+  const dom = view.nodeDOM(heading.pos);
+  if (dom instanceof HTMLElement) {
+    scroller.scrollTo({ top: headingTop(dom.getBoundingClientRect().top) - 24 });
+  }
+  const end = heading.pos + view.state.doc.nodeAt(heading.pos)!.nodeSize - 1;
+  view.dispatch(view.state.tr.setSelection(TextSelection.create(view.state.doc, end)));
+  view.focus();
+}
+
+/** Converts a viewport y coordinate to a scroller offset. */
+function headingTop(viewportY: number): number {
+  return viewportY - scroller.getBoundingClientRect().top + scroller.scrollTop;
+}
+
+function updateActiveHeading(): void {
+  if (outlineEl.hidden || headings.length === 0) return;
+  const threshold = scroller.getBoundingClientRect().top + 80;
+  const view = source ? null : proseView();
+  let active = -1;
+  for (const [i, heading] of headings.entries()) {
+    let top: number | null = null;
+    if (source) {
+      top =
+        source.lineBlockAt(Math.min(heading.pos, source.state.doc.length)).top + source.documentTop;
+    } else {
+      const dom = view?.nodeDOM(heading.pos);
+      if (dom instanceof HTMLElement) top = dom.getBoundingClientRect().top;
+    }
+    if (top === null || top > threshold) break;
+    active = i;
+  }
+  setActiveOutline(outlineList, Math.max(active, 0));
+}
+
+scroller.addEventListener("scroll", () => requestAnimationFrame(updateActiveHeading), {
+  passive: true,
+});
+
+try {
+  outlineEl.hidden = localStorage.getItem(OUTLINE_KEY) !== "1";
+} catch {
+  // Default: hidden.
 }
 
 // ---------------------------------------------------------------------------
@@ -375,6 +675,11 @@ async function main(): Promise<void> {
   await appWindow.listen<string>("menu", ({ payload }) => {
     if (payload === "save") void save();
     if (payload === "save_as") void save(true);
+    if (payload === "find") openFind();
+    if (payload === "find_next") stepFind(1);
+    if (payload === "find_prev") stepFind(-1);
+    if (payload === "toggle_outline") toggleOutline();
+    if (payload === "toggle_source") serially(toggleSourceMode);
   });
   await appWindow.listen("file-changed", () => serially(onFileChanged));
   await appWindow.listen("load-file", () => serially(loadWindowFile));
@@ -390,7 +695,8 @@ async function main(): Promise<void> {
     }
   });
 
-  (editorRoot.querySelector(".ProseMirror") as HTMLElement | null)?.focus();
+  if (source) source.focus();
+  else (editorRoot.querySelector(".ProseMirror") as HTMLElement | null)?.focus();
 }
 
 void main();

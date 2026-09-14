@@ -42,11 +42,15 @@ Typography
   generic family (`serif`, `sans-serif`, `monospace`).
 - `--gmd-font-size` (base, e.g. `16px`), `--gmd-line-height` (unitless, e.g. `1.7`)
 - `--gmd-code-font-size` (relative, e.g. `0.875em`), `--gmd-paragraph-spacing`
+- `--gmd-source-font-size` (source mode text, e.g. `14px`)
 
 Layout
 - `--gmd-content-width` (text column max width, e.g. `740px`)
 - `--gmd-page-padding-x`, `--gmd-page-padding-top`, `--gmd-page-padding-bottom`
 - `--gmd-radius` (code blocks, images)
+- `--gmd-outline-width` (outline sidebar, e.g. `240px`)
+- `--gmd-handle-size` (block `+`/drag icons, e.g. `16px`), `--gmd-handle-opacity`
+  (resting opacity, full on hover)
 
 Headings
 - `--gmd-h1-size` … `--gmd-h6-size`, `--gmd-heading-weight`,
@@ -69,6 +73,7 @@ Colors (define in both light and dark blocks)
 - Blocks: `--gmd-blockquote-border`, `--gmd-blockquote-text`,
   `--gmd-table-border`, `--gmd-table-header-bg`, `--gmd-table-stripe`,
   `--gmd-hr-color`
+- Find: `--gmd-find-match`, `--gmd-find-current`
 - Syntax highlighting: `--gmd-syntax-keyword`, `-string`, `-number`, `-comment`,
   `-function`, `-type`, `-property`, `-tag`, `-punctuation`, `-invalid`
 

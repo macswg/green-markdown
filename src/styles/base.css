@@ -315,3 +315,206 @@ body {
 .milkdown .milkdown-table-block tr:nth-child(even) td {
   background: var(--gmd-table-stripe);
 }
+
+/* ---- Workspace: outline + document -------------------------------------- */
+
+.gmd-workspace {
+  flex: 1;
+  display: flex;
+  min-height: 0;
+}
+
+.gmd-outline {
+  flex: 0 0 var(--gmd-outline-width, 240px);
+  overflow-y: auto;
+  padding: 16px 0;
+  border-right: 1px solid var(--gmd-border);
+  background: var(--gmd-surface-low);
+  font-size: 13px;
+}
+
+.gmd-outline[hidden] {
+  display: none;
+}
+
+.gmd-outline-title {
+  padding: 0 16px 8px;
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--gmd-text-muted);
+}
+
+.gmd-outline ul {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+
+.gmd-outline button {
+  display: block;
+  width: 100%;
+  padding: 4px 12px 4px 10px;
+  border: none;
+  border-left: 2px solid transparent;
+  background: none;
+  color: var(--gmd-text);
+  font: inherit;
+  text-align: left;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  cursor: pointer;
+}
+
+.gmd-outline button[data-level="1"] {
+  font-weight: 600;
+}
+
+.gmd-outline button:hover {
+  background: var(--gmd-hover);
+}
+
+.gmd-outline button.active {
+  border-left-color: var(--gmd-accent);
+  color: var(--gmd-accent);
+}
+
+.gmd-outline-empty {
+  padding: 4px 16px;
+  color: var(--gmd-text-muted);
+}
+
+@media (max-width: 640px) {
+  .gmd-outline {
+    flex-basis: 180px;
+  }
+}
+
+/* ---- Find bar ------------------------------------------------------------ */
+
+.gmd-findbar {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 6px 12px;
+  font-size: 13px;
+  background: var(--gmd-surface-low);
+  border-bottom: 1px solid var(--gmd-border);
+}
+
+.gmd-findbar[hidden] {
+  display: none;
+}
+
+.gmd-findbar input[type="search"] {
+  flex: 0 1 280px;
+  min-width: 80px;
+  padding: 4px 8px;
+  font: inherit;
+  color: var(--gmd-text);
+  background: var(--gmd-surface);
+  border: 1px solid var(--gmd-border);
+  border-radius: 5px;
+  outline: none;
+}
+
+.gmd-findbar input[type="search"]:focus {
+  border-color: var(--gmd-accent);
+}
+
+.gmd-findbar.no-match input[type="search"] {
+  border-color: #d1242f;
+}
+
+.gmd-find-case {
+  display: flex;
+  align-items: center;
+  cursor: pointer;
+  user-select: none;
+}
+
+.gmd-find-case input {
+  position: absolute;
+  opacity: 0;
+  pointer-events: none;
+}
+
+.gmd-find-case span,
+.gmd-findbar button {
+  padding: 2px 8px;
+  border: 1px solid transparent;
+  border-radius: 5px;
+  background: none;
+  color: var(--gmd-text-muted);
+  font: inherit;
+  cursor: pointer;
+}
+
+.gmd-find-case input:checked + span {
+  color: var(--gmd-accent);
+  border-color: var(--gmd-accent);
+}
+
+.gmd-find-case input:focus-visible + span {
+  outline: 2px solid var(--gmd-accent);
+}
+
+.gmd-findbar button:hover,
+.gmd-find-case span:hover {
+  background: var(--gmd-hover);
+  color: var(--gmd-text);
+}
+
+.gmd-find-count {
+  min-width: 64px;
+  color: var(--gmd-text-muted);
+  font-variant-numeric: tabular-nums;
+}
+
+.gmd-find-match {
+  background: var(--gmd-find-match, #fbe89a);
+  border-radius: 2px;
+}
+
+.gmd-find-current {
+  background: var(--gmd-find-current, #f5b93d);
+}
+
+/* ---- Source mode --------------------------------------------------------- */
+
+.gmd-source[hidden],
+.gmd-page[hidden] {
+  display: none;
+}
+
+.gmd-source .cm-editor {
+  min-height: 100%;
+}
+
+/* ---- Block handle: small, subtle, fades in place ------------------------- */
+
+.milkdown .milkdown-block-handle {
+  /* Only fade; animating position made it slide when hiding. */
+  transition: opacity 0.15s ease;
+  gap: 0;
+}
+
+.milkdown .milkdown-block-handle .operation-item {
+  width: calc(var(--gmd-handle-size, 16px) + 6px);
+  height: calc(var(--gmd-handle-size, 16px) + 6px);
+  padding: 3px;
+  opacity: var(--gmd-handle-opacity, 0.45);
+  transition: opacity 0.15s ease;
+}
+
+.milkdown .milkdown-block-handle .operation-item:hover,
+.milkdown .milkdown-block-handle .operation-item.active {
+  opacity: 1;
+}
+
+.milkdown .milkdown-block-handle .operation-item svg {
+  width: var(--gmd-handle-size, 16px);
+  height: var(--gmd-handle-size, 16px);
+}

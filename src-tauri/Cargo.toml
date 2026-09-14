@@ -1,6 +1,6 @@
 [package]
 name = "gmd"
-version = "0.2.1"
+version = "0.2.2"
 description = "Green Markdown — a lightweight Typora-style markdown editor"
 authors = ["Sean G"]
 edition = "2021"

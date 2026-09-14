@@ -549,7 +549,11 @@ function headingTop(viewportY: number): number {
 
 function updateActiveHeading(): void {
   if (outlineEl.hidden || headings.length === 0) return;
-  const threshold = scroller.getBoundingClientRect().top + 80;
+  const bounds = scroller.getBoundingClientRect();
+  // At the end of the document, headings near the bottom can never reach the
+  // top of the view; count any heading on screen instead.
+  const atBottom = scroller.scrollTop + scroller.clientHeight >= scroller.scrollHeight - 2;
+  const threshold = atBottom ? bounds.bottom - 40 : bounds.top + 80;
   const view = source ? null : proseView();
   let active = -1;
   for (const [i, heading] of headings.entries()) {

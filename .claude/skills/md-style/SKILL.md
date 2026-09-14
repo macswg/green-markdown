@@ -5,21 +5,37 @@ description: Change how Green Markdown (the gmd markdown editor app) looks or be
 
 # Styling Green Markdown
 
-Green Markdown reads two files from this repo and **hot-reloads them in every
-open window** within about a second of saving. Editing them is the whole job;
-there is no rebuild or restart.
+Green Markdown reads two files from its **config folder** and **hot-reloads
+them in every open window** within about a second of saving. Editing them is the
+whole job; there is no rebuild or restart.
 
 | File | Controls |
 |------|----------|
-| `config/theme.css` | Everything visual: CSS variables + optional override rules |
-| `config/settings.json` | Behavior: appearance mode, editor options, which theme file |
+| `theme.css` | Everything visual: CSS variables + optional override rules |
+| `settings.json` | Behavior: appearance mode, editor options, which theme file |
 
-A built app finds `config/` in the checkout it was built from (or
-`$GMD_CONFIG_DIR` if set). The File/app menu has **Open Config Folder**.
+### Which config folder is live
+
+The app uses the first of these that exists:
+
+1. `$GMD_CONFIG_DIR` (rare; GUI launches don't see shell variables).
+2. The repo `config/` path recorded at build time — only for apps **built
+   locally** from a checkout (`npm run tauri build` / `tauri dev`).
+3. **The per-user folder** — what installed releases use:
+   - macOS: `~/Library/Application Support/Green Markdown/config/`
+   - Windows: `%APPDATA%\Green Markdown\config\`
+   - Linux: `~/.config/Green Markdown/config/`
+
+**Default to the per-user folder** when the user has an installed release (the
+normal case). Edit the repo `config/` only when they're running a local/dev
+build, or when they ask to change the defaults shipped to new installs. The
+two copies don't sync; say which one you changed. If unsure, check whether
+`/Applications/Green Markdown.app` exists and that the per-user folder does.
+The app's menu has **Open Config Folder**, which opens whichever is live.
 
 ## Workflow
 
-1. Read the current `config/theme.css` (and `settings.json` if behavior is
+1. Read the current `theme.css` in the live folder (and `settings.json` if behavior is
    involved) — never overwrite blind; the user may have customized it.
 2. Prefer changing an existing `--gmd-*` variable over adding rules.
 3. Colors: change **both** the light block (`:root`) and the dark block
@@ -34,7 +50,7 @@ A built app finds `config/` in the checkout it was built from (or
 6. These files are in git — mention that the user can commit to sync the look
    across machines.
 
-## Theme variables (`config/theme.css`)
+## Theme variables (`theme.css`)
 
 Typography
 - `--gmd-font-body`, `--gmd-font-heading`, `--gmd-font-mono` — font stacks. Only
@@ -77,11 +93,11 @@ Colors (define in both light and dark blocks)
 - Syntax highlighting: `--gmd-syntax-keyword`, `-string`, `-number`, `-comment`,
   `-function`, `-type`, `-property`, `-tag`, `-punctuation`, `-invalid`
 
-## Settings (`config/settings.json`)
+## Settings (`settings.json`)
 
 | Key | Values | Meaning |
 |-----|--------|---------|
-| `theme` | path inside `config/`, default `"theme.css"` | Which CSS file is the theme |
+| `theme` | path inside the config folder, default `"theme.css"` | Which CSS file is the theme |
 | `appearance` | `"system"` / `"light"` / `"dark"` | Color mode |
 | `editor.spellcheck` | `true` / `false` | Spellcheck underlines |
 | `editor.bulletChar` | `"auto"` / `"-"` / `"*"` / `"+"` | Bullet marker for edited lists; `auto` matches the file |
@@ -121,6 +137,6 @@ Custom rule example (bottom of theme.css):
 
 ## Verifying
 
-The app shows a banner for invalid settings or a missing theme file. If you
-can't see the app, run `npm test` in the repo root — it fails if
-`config/settings.json` has warnings.
+The app shows a banner for invalid settings or a missing theme file. The repo's
+`npm test` only validates the repo `config/settings.json`; for the per-user
+copy, check it parses as JSON and uses only keys listed above.

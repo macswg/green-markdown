@@ -9,7 +9,7 @@
     "preview": "vite preview",
     "tauri": "tauri",
     "test": "vitest run",
-    "format": "prettier --write src tests && cargo fmt --manifest-path src-tauri/Cargo.toml"
+    "format": "prettier --write src \"tests/**/*.ts\" && cargo fmt --manifest-path src-tauri/Cargo.toml"
   },
   "dependencies": {
     "@codemirror/commands": "^6.11.0",

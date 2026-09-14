@@ -21,6 +21,7 @@ import { imageSchema } from "@milkdown/kit/preset/commonmark";
 import { $view } from "@milkdown/kit/utils";
 import { clearTextInCurrentBlockCommand } from "@milkdown/kit/preset/commonmark";
 import { commandsCtx } from "@milkdown/kit/core";
+import { details } from "./details";
 import { proseFindPlugin } from "./find";
 import type { Bullet, DocStyle, HardBreak, Rule } from "./markdown";
 import { preserveUnchanged } from "./preserve";
@@ -79,7 +80,7 @@ export async function createEditor(options: EditorOptions): Promise<Editor> {
     ctx.update(uploadConfig.key, (prev) => ({ ...prev, uploader: async () => [] }));
   });
 
-  crepe.editor.use(imageView(options.resolveImage ?? ((src) => src))).use(proseFindPlugin);
+  crepe.editor.use(imageView(options.resolveImage ?? ((src) => src))).use(proseFindPlugin).use(details);
 
   crepe
     .addFeature(listItem)

@@ -92,6 +92,7 @@ updates signed with a new key and have to be reinstalled by hand.
 | Find | ⌘F, then ↵ / ⇧↵ (or ⌘G / ⇧⌘G) for next/previous, Esc to close. `Aa` matches case |
 | Outline | ⇧⌘O (View → Toggle Outline) shows a heading sidebar; click to jump |
 | Source mode | ⌘/ (View → Toggle Source Mode), or "Source mode" in the `/` menu. Edits the raw file, front matter included, byte-for-byte |
+| Collapsible sections | `<details>` / `<summary>` blocks render as collapsible sections; the summary and body are editable |
 | Front matter | YAML/TOML front matter appears as a collapsible raw block at the top |
 | Config folder | App menu (macOS) / File menu → Open Config Folder |
 
@@ -168,7 +169,8 @@ tests/          vitest suites and markdown fixtures
 
 ## Known limitations (Phase 1)
 
-- Raw HTML blocks show as source text instead of rendering.
+- Raw HTML blocks show as source text instead of rendering (except multi-line
+  `<details>` blocks).
 - Pasting or dropping image files is ignored (Phase 2: save into `./assets/`).
   Existing images, relative or absolute, display normally.
 - Find highlights don't show inside code blocks in rich mode (the match is

@@ -236,6 +236,36 @@ body {
   border-radius: 4px;
 }
 
+.milkdown .ProseMirror details.gmd-details {
+  margin: 0 0 var(--gmd-paragraph-spacing);
+  padding: 0.4em 0.8em;
+  border: 1px solid var(--gmd-border);
+  border-radius: var(--gmd-radius);
+}
+
+.milkdown .ProseMirror details.gmd-details > summary {
+  cursor: pointer;
+  font-weight: 600;
+}
+
+.milkdown .ProseMirror details.gmd-details[open] > summary {
+  margin-bottom: 0.4em;
+}
+
+.milkdown .ProseMirror .gmd-details-summary {
+  width: calc(100% - 1.5em);
+  padding: 0;
+  border: none;
+  outline: none;
+  background: transparent;
+  color: inherit;
+  font: inherit;
+}
+
+.milkdown .ProseMirror .gmd-details-content > :last-child {
+  margin-bottom: 0;
+}
+
 .milkdown .ProseMirror blockquote {
   margin: 0 0 var(--gmd-paragraph-spacing);
   padding: 0 0 0 1.1em;

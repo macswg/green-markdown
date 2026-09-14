@@ -102,7 +102,7 @@ Colors (define in both light and dark blocks)
 | `editor.spellcheck` | `true` / `false` | Spellcheck underlines |
 | `editor.bulletChar` | `"auto"` / `"-"` / `"*"` / `"+"` | Bullet marker for edited lists; `auto` matches the file |
 | `editor.hardBreak` | `"auto"` / `"spaces"` / `"backslash"` | How line breaks are written; `auto` matches the file |
-| `editor.blockHandle` | `true` / `false` | `+`/drag handle beside blocks and the `/` menu |
+| `editor.blockHandle` | `true` / `false` | Drag handle beside blocks and the `/` menu |
 | `editor.selectionToolbar` | `true` / `false` | Formatting toolbar on text selection |
 | `editor.placeholder` | string | Hint text in empty documents |
 

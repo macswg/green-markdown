@@ -175,5 +175,4 @@ tests/          vitest suites and markdown fixtures
   Existing images, relative or absolute, display normally.
 - Find highlights don't show inside code blocks in rich mode (the match is
   still selected); use source mode for those. No replace yet.
-- On Windows, the file-drop handler disables dragging blocks by their handle.
 - Math and Mermaid are intentionally off.

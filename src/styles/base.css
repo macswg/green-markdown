@@ -539,6 +539,27 @@ body {
   transition: opacity 0.15s ease;
 }
 
+.gmd-drop-indicator {
+  position: fixed;
+  z-index: 100;
+  height: 2px;
+  margin-top: -1px;
+  border-radius: 1px;
+  background: var(--gmd-accent);
+  pointer-events: none;
+}
+
+body.gmd-block-dragging,
+body.gmd-block-dragging * {
+  cursor: grabbing !important;
+  user-select: none;
+}
+
+/* The "+" duplicates the "/" menu; keep only the drag handle. */
+.milkdown .milkdown-block-handle .operation-item:first-child {
+  display: none;
+}
+
 .milkdown .milkdown-block-handle .operation-item:hover,
 .milkdown .milkdown-block-handle .operation-item.active {
   opacity: 1;

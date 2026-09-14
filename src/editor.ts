@@ -21,6 +21,7 @@ import { imageSchema } from "@milkdown/kit/preset/commonmark";
 import { $view } from "@milkdown/kit/utils";
 import { clearTextInCurrentBlockCommand } from "@milkdown/kit/preset/commonmark";
 import { commandsCtx } from "@milkdown/kit/core";
+import { blockDrag } from "./block-drag";
 import { details } from "./details";
 import { proseFindPlugin } from "./find";
 import type { Bullet, DocStyle, HardBreak, Rule } from "./markdown";
@@ -91,6 +92,7 @@ export async function createEditor(options: EditorOptions): Promise<Editor> {
     .addFeature(placeholder, { text: settings.placeholder, mode: "doc" });
   const onSourceMode = options.onSourceMode;
   if (settings.blockHandle) {
+    crepe.editor.use(blockDrag);
     crepe.addFeature(blockEdit, {
       buildMenu: (builder) => {
         if (!onSourceMode) return;

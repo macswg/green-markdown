@@ -10,6 +10,7 @@ import { Compartment, EditorState } from "@codemirror/state";
 import { drawSelection, EditorView, keymap, lineNumbers } from "@codemirror/view";
 import { tags as t } from "@lezer/highlight";
 import { cmFindExtension } from "./find";
+import { hoverLine } from "./hover-line";
 
 export interface SourceOptions {
   root: HTMLElement;
@@ -33,7 +34,7 @@ export function createSourceEditor(options: SourceOptions): EditorView {
         history(),
         drawSelection(),
         EditorView.lineWrapping,
-        gutter.of(options.lineNumbers ? lineNumbers() : []),
+        gutter.of(options.lineNumbers ? [lineNumbers(), hoverLine] : []),
         // Mod-/ belongs to the app (source mode toggle), not toggle-comment.
         keymap.of([
           indentWithTab,
@@ -58,7 +59,7 @@ export function createSourceEditor(options: SourceOptions): EditorView {
 }
 
 export function setLineNumbers(view: EditorView, on: boolean): void {
-  view.dispatch({ effects: gutter.reconfigure(on ? lineNumbers() : []) });
+  view.dispatch({ effects: gutter.reconfigure(on ? [lineNumbers(), hoverLine] : []) });
 }
 
 /** Text with BOM removed and CRLF normalized; what source mode edits. */

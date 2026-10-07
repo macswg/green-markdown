@@ -47,6 +47,7 @@ import {
 import type { Settings } from "./settings";
 import { createSourceEditor, fromSourceText, setLineNumbers, toSourceText } from "./source";
 import { applyAppearance, applyTheme, loadConfig } from "./theme";
+import { createTitlebar } from "./titlebar";
 
 const appWindow = getCurrentWindow();
 const scroller = document.getElementById("scroller") as HTMLElement;
@@ -62,6 +63,7 @@ const findCount = findbar.querySelector(".gmd-find-count") as HTMLElement;
 const frontmatterBox = document.getElementById("frontmatter") as HTMLDetailsElement;
 const frontmatterInput = frontmatterBox.querySelector("textarea") as HTMLTextAreaElement;
 const banner = document.getElementById("banner") as HTMLElement;
+const titlebarEl = document.getElementById("titlebar") as HTMLElement;
 
 /** Logs to the terminal running `tauri dev`; a no-op in release builds. */
 function debug(message: string): void {
@@ -204,6 +206,7 @@ function setDirty(value: boolean): void {
 }
 
 function updateTitle(): void {
+  titlebar?.setTitle(fileName(path), dirty);
   const title = `${dirty ? "● " : ""}${fileName(path)}`;
   document.title = title;
   void appWindow.setTitle(title);
@@ -271,6 +274,34 @@ async function save(saveAs = false): Promise<boolean> {
   setDirty(false);
   hideBanner();
   return true;
+}
+
+// ---------------------------------------------------------------------------
+// Title bar and renaming
+// ---------------------------------------------------------------------------
+
+/** macOS only: elsewhere the native title bar stays. */
+const titlebar = /Mac/.test(navigator.userAgent)
+  ? createTitlebar({ root: titlebarEl, canRename: () => path !== null, rename: renameFile })
+  : null;
+titlebarEl.hidden = titlebar === null;
+
+/** Renames the file on disk, keeping its folder. Resolves false on failure. */
+function renameFile(name: string): Promise<boolean> {
+  return new Promise((resolve) =>
+    // Queued so watcher events from the rename see the new path.
+    serially(async () => {
+      try {
+        path = await invoke<string>("rename_file", { name });
+        updateTitle();
+        debug(`renamed to ${path}`);
+        resolve(true);
+      } catch (e) {
+        showBanner(String(e));
+        resolve(false);
+      }
+    }),
+  );
 }
 
 // ---------------------------------------------------------------------------

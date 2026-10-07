@@ -37,6 +37,48 @@ body {
 
 /* ---- Banner -------------------------------------------------------------- */
 
+/* Page-drawn window title (macOS); the traffic lights float over its left end. */
+.gmd-titlebar {
+  flex: none;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  height: 28px;
+  padding: 0 80px;
+  background: var(--gmd-bg);
+  border-bottom: 1px solid var(--gmd-border);
+  font-family: -apple-system, BlinkMacSystemFont, sans-serif;
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--gmd-text-muted);
+  user-select: none;
+  -webkit-user-select: none;
+  cursor: default;
+}
+
+.gmd-titlebar[hidden] {
+  display: none;
+}
+
+.gmd-title {
+  overflow: hidden;
+  white-space: nowrap;
+  text-overflow: ellipsis;
+}
+
+.gmd-title-input {
+  width: min(360px, 60vw);
+  padding: 1px 6px;
+  border: 1px solid var(--gmd-accent);
+  border-radius: 4px;
+  background: var(--gmd-bg);
+  color: var(--gmd-text);
+  font: inherit;
+  font-weight: 400;
+  text-align: center;
+  outline: none;
+}
+
 .gmd-banner {
   display: flex;
   align-items: center;

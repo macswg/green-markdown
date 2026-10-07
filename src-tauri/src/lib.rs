@@ -97,6 +97,55 @@ fn write_text(path: String, contents: String) -> Result<(), String> {
         .map_err(|e| format!("could not save {path}: {e}"))
 }
 
+/// Renames the window's file within its folder; returns the new path.
+#[tauri::command]
+fn rename_file(
+    window: WebviewWindow,
+    state: State<AppState>,
+    name: String,
+) -> Result<String, String> {
+    let name = name.trim();
+    if !valid_file_name(name) {
+        return Err(format!("“{name}” isn't a valid file name."));
+    }
+    let old = state
+        .docs
+        .lock()
+        .unwrap()
+        .get(window.label())
+        .and_then(|d| d.path.clone())
+        .ok_or("Save this document before renaming it.")?;
+    let new = old.with_file_name(name);
+    if new == old {
+        return Ok(old.to_string_lossy().into_owned());
+    }
+    // A case-only change on a case-insensitive disk finds the file itself.
+    if new.exists() && !same_file(&old, &new) {
+        return Err(format!("“{name}” already exists in this folder."));
+    }
+    fs::rename(&old, &new).map_err(|e| format!("could not rename to “{name}”: {e}"))?;
+    attach_path(window.app_handle(), window.label(), new.clone());
+    Ok(new.to_string_lossy().into_owned())
+}
+
+fn valid_file_name(name: &str) -> bool {
+    !name.is_empty() && name != "." && name != ".." && !name.contains(['/', '\\', ':', '\0'])
+}
+
+#[cfg(unix)]
+fn same_file(a: &Path, b: &Path) -> bool {
+    use std::os::unix::fs::MetadataExt;
+    match (fs::metadata(a), fs::metadata(b)) {
+        (Ok(a), Ok(b)) => a.dev() == b.dev() && a.ino() == b.ino(),
+        _ => false,
+    }
+}
+
+#[cfg(not(unix))]
+fn same_file(a: &Path, b: &Path) -> bool {
+    a.to_string_lossy().to_lowercase() == b.to_string_lossy().to_lowercase()
+}
+
 #[tauri::command]
 fn get_config() -> ConfigInfo {
     let (dir, source) = config::current();
@@ -220,6 +269,14 @@ fn create_doc_window(app: &AppHandle, path: Option<PathBuf>) -> tauri::Result<We
     let mut builder = WebviewWindowBuilder::new(app, &label, WebviewUrl::App("index.html".into()))
         .title(title)
         .min_inner_size(420.0, 320.0);
+    // The page draws its own title (right-click to rename) under the
+    // traffic lights; the native title stays for Mission Control and menus.
+    #[cfg(target_os = "macos")]
+    {
+        builder = builder
+            .title_bar_style(tauri::TitleBarStyle::Overlay)
+            .hidden_title(true);
+    }
     match saved {
         Some(g) => {
             let offset = if has_windows { CASCADE_OFFSET } else { 0.0 };
@@ -589,6 +646,7 @@ pub fn run() {
             set_dirty,
             read_text,
             write_text,
+            rename_file,
             get_config,
             read_config_file,
             open_paths,
@@ -683,6 +741,15 @@ pub fn run() {
 
 #[cfg(test)]
 mod tests {
+    #[test]
+    fn file_names() {
+        assert!(super::valid_file_name("notes.txt"));
+        assert!(super::valid_file_name(".hidden"));
+        for bad in ["", ".", "..", "a/b", "a\\b", "a:b"] {
+            assert!(!super::valid_file_name(bad), "{bad:?}");
+        }
+    }
+
     use super::*;
 
     #[test]

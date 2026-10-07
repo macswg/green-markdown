@@ -4,6 +4,7 @@
 mod config;
 mod fsio;
 mod update;
+mod zoom;
 
 use std::collections::HashMap;
 use std::fs;
@@ -46,6 +47,7 @@ pub(crate) struct AppState {
     pub(crate) docs: Mutex<HashMap<String, Doc>>,
     geometry: Mutex<Option<Geometry>>,
     config_watcher: Mutex<Option<fsio::Watcher>>,
+    pub(crate) zoom: zoom::Zoom,
 }
 
 #[derive(Serialize)]
@@ -230,8 +232,11 @@ fn create_doc_window(app: &AppHandle, path: Option<PathBuf>) -> tauri::Result<We
     }
 
     let window = builder.build();
-    if window.is_err() {
-        state.docs.lock().unwrap().remove(&label);
+    match &window {
+        Ok(w) => zoom::apply(w),
+        Err(_) => {
+            state.docs.lock().unwrap().remove(&label);
+        }
     }
     window
 }
@@ -413,7 +418,16 @@ fn build_menu(app: &AppHandle) -> tauri::Result<Menu<tauri::Wry>> {
             &find_prev,
         ],
     )?;
-    let view = Submenu::with_items(app, "View", true, &[&outline, &source])?;
+    let zoom_in = MenuItem::with_id(app, "zoom_in", "Zoom In", true, Some("CmdOrCtrl+="))?;
+    let zoom_out = MenuItem::with_id(app, "zoom_out", "Zoom Out", true, Some("CmdOrCtrl+-"))?;
+    let zoom_reset =
+        MenuItem::with_id(app, "zoom_reset", "Actual Size", true, Some("CmdOrCtrl+0"))?;
+    let view = Submenu::with_items(
+        app,
+        "View",
+        true,
+        &[&outline, &source, &sep()?, &zoom_in, &zoom_out, &zoom_reset],
+    )?;
 
     #[cfg(target_os = "macos")]
     {
@@ -480,6 +494,9 @@ fn build_menu(app: &AppHandle) -> tauri::Result<Menu<tauri::Wry>> {
 }
 
 fn handle_menu(app: &AppHandle, id: &str) {
+    if zoom::handle_menu(app, id) {
+        return;
+    }
     match id {
         "new" => {
             let _ = create_doc_window(app, None);
@@ -489,7 +506,7 @@ fn handle_menu(app: &AppHandle, id: &str) {
             let handle = app.clone();
             app.dialog()
                 .file()
-                .add_filter("Markdown", MARKDOWN_EXTENSIONS)
+                .add_filter("Markdown & Text", MARKDOWN_EXTENSIONS)
                 .pick_files(move |picked| {
                     let paths = picked
                         .unwrap_or_default()
@@ -559,6 +576,7 @@ pub fn run() {
         .setup(|app| {
             let handle = app.handle().clone();
             *app.state::<AppState>().geometry.lock().unwrap() = load_geometry(&handle);
+            zoom::load(&handle);
 
             app.set_menu(build_menu(&handle)?)?;
             app.on_menu_event(|app, event| handle_menu(app, event.id().as_ref()));

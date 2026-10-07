@@ -2,6 +2,8 @@ import { describe, expect, test } from "vitest";
 import {
   detectStyle,
   emptyDocument,
+  isOpenablePath,
+  isPlainTextPath,
   joinDocument,
   resolveLocalPath,
   splitDocument,
@@ -110,5 +112,20 @@ describe("resolveLocalPath", () => {
     expect(resolveLocalPath("/n/doc.md", "mailto:me@example.com")).toBeNull();
     expect(resolveLocalPath("/n/doc.md", "#section")).toBeNull();
     expect(resolveLocalPath(null, "x.png")).toBeNull();
+  });
+});
+
+describe("file kinds", () => {
+  test("plain text paths", () => {
+    expect(isPlainTextPath("/notes/todo.txt")).toBe(true);
+    expect(isPlainTextPath("C:\\notes\\TODO.TXT")).toBe(true);
+    expect(isPlainTextPath("/notes/readme.md")).toBe(false);
+    expect(isPlainTextPath(null)).toBe(false);
+  });
+
+  test("openable paths include markdown and text", () => {
+    expect(isOpenablePath("a.md")).toBe(true);
+    expect(isOpenablePath("a.txt")).toBe(true);
+    expect(isOpenablePath("a.png")).toBe(false);
   });
 });

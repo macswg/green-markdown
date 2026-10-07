@@ -1,7 +1,8 @@
 # Green Markdown (`gmd`)
 
 A lightweight, Typora-style markdown editor. It opens `.md` files as clean,
-always-editable documents, one file per window. Theme and behavior live in plain
+always-editable documents, one file per window. Plain `.txt` files open in a
+byte-exact text editor (⌘/ previews them as markdown). Theme and behavior live in plain
 files in this repo that Claude can edit, and open windows restyle as soon as
 those files are saved.
 

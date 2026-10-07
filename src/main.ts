@@ -31,7 +31,8 @@ import {
   detectStyle,
   emptyDocument,
   fileName,
-  isMarkdownPath,
+  isOpenablePath,
+  isPlainTextPath,
   joinDocument,
   resolveLocalPath,
   splitDocument,
@@ -220,6 +221,8 @@ async function loadWindowFile(): Promise<void> {
     await showDocument(null);
     showBanner(String(e).replace(/^not-found: /, "File not found: "));
   }
+  // Plain text is edited as-is; ⌘/ still previews it as markdown.
+  if (isPlainTextPath(path)) await enterSourceMode();
   showConfigWarnings();
 }
 
@@ -231,9 +234,11 @@ async function save(saveAs = false): Promise<boolean> {
   if (!editor) return false;
   let target = path;
   if (!target || saveAs) {
+    const markdownFilter = { name: "Markdown", extensions: ["md", "markdown"] };
+    const textFilter = { name: "Plain Text", extensions: ["txt"] };
     const chosen = await saveDialog({
       defaultPath: path ?? "Untitled.md",
-      filters: [{ name: "Markdown", extensions: ["md", "markdown"] }],
+      filters: isPlainTextPath(path) ? [textFilter, markdownFilter] : [markdownFilter, textFilter],
     });
     if (!chosen) return false;
     target = chosen;
@@ -361,6 +366,7 @@ async function enterSourceMode(): Promise<void> {
     root: sourceRoot,
     text: sourceEntryText,
     spellcheck: settings.editor.spellcheck,
+    plain: isPlainTextPath(path),
     languages,
     onChange: () => updateDirty(),
   });
@@ -598,7 +604,7 @@ editorRoot.addEventListener("click", (event) => {
   const href = anchor.getAttribute("href") ?? "";
   const local = resolveLocalPath(path, href);
   if (local) {
-    if (isMarkdownPath(local)) void invoke("open_paths", { paths: [local], reuse: null });
+    if (isOpenablePath(local)) void invoke("open_paths", { paths: [local], reuse: null });
   } else if (/^(https?|mailto):/i.test(href)) {
     void openUrl(href);
   }
@@ -697,7 +703,7 @@ async function main(): Promise<void> {
   });
   await getCurrentWebview().onDragDropEvent(({ payload }) => {
     if (payload.type !== "drop") return;
-    const paths = payload.paths.filter(isMarkdownPath);
+    const paths = payload.paths.filter(isOpenablePath);
     if (paths.length > 0) {
       void invoke("open_paths", { paths, reuse: dirty || path ? null : appWindow.label });
     }

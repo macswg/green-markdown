@@ -15,6 +15,8 @@ export interface SourceOptions {
   root: HTMLElement;
   text: string;
   spellcheck: boolean;
+  /** Plain text: no markdown parsing or highlighting. */
+  plain?: boolean;
   languages?: LanguageDescription[];
   onChange: () => void;
 }
@@ -34,8 +36,12 @@ export function createSourceEditor(options: SourceOptions): EditorView {
           ...defaultKeymap.filter((binding) => binding.key !== "Mod-/"),
           ...historyKeymap,
         ]),
-        markdown({ codeLanguages: options.languages ?? [] }),
-        syntaxHighlighting(sourceHighlight),
+        options.plain
+          ? []
+          : [
+              markdown({ codeLanguages: options.languages ?? [] }),
+              syntaxHighlighting(sourceHighlight),
+            ],
         cmFindExtension,
         sourceTheme,
         EditorView.contentAttributes.of({ spellcheck: String(options.spellcheck) }),

@@ -181,6 +181,16 @@ export function isMarkdownPath(path: string): boolean {
   return /\.(md|markdown|mdown|mkd|mdx)$/i.test(path);
 }
 
+/** Plain text files open in source mode without markdown highlighting. */
+export function isPlainTextPath(path: string | null): boolean {
+  return path !== null && /\.txt$/i.test(path);
+}
+
+/** Files the app opens from links and drag-and-drop. */
+export function isOpenablePath(path: string): boolean {
+  return isMarkdownPath(path) || isPlainTextPath(path);
+}
+
 export function fileName(path: string | null): string {
   if (!path) return "Untitled";
   return path.split(/[\\/]/).pop() || path;

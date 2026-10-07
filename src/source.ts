@@ -6,8 +6,8 @@
 import { defaultKeymap, history, historyKeymap, indentWithTab } from "@codemirror/commands";
 import { markdown } from "@codemirror/lang-markdown";
 import { type LanguageDescription, syntaxHighlighting, HighlightStyle } from "@codemirror/language";
-import { EditorState } from "@codemirror/state";
-import { drawSelection, EditorView, keymap } from "@codemirror/view";
+import { Compartment, EditorState } from "@codemirror/state";
+import { drawSelection, EditorView, keymap, lineNumbers } from "@codemirror/view";
 import { tags as t } from "@lezer/highlight";
 import { cmFindExtension } from "./find";
 
@@ -15,11 +15,14 @@ export interface SourceOptions {
   root: HTMLElement;
   text: string;
   spellcheck: boolean;
+  lineNumbers: boolean;
   /** Plain text: no markdown parsing or highlighting. */
   plain?: boolean;
   languages?: LanguageDescription[];
   onChange: () => void;
 }
+
+const gutter = new Compartment();
 
 export function createSourceEditor(options: SourceOptions): EditorView {
   return new EditorView({
@@ -30,6 +33,7 @@ export function createSourceEditor(options: SourceOptions): EditorView {
         history(),
         drawSelection(),
         EditorView.lineWrapping,
+        gutter.of(options.lineNumbers ? lineNumbers() : []),
         // Mod-/ belongs to the app (source mode toggle), not toggle-comment.
         keymap.of([
           indentWithTab,
@@ -51,6 +55,10 @@ export function createSourceEditor(options: SourceOptions): EditorView {
       ],
     }),
   });
+}
+
+export function setLineNumbers(view: EditorView, on: boolean): void {
+  view.dispatch({ effects: gutter.reconfigure(on ? lineNumbers() : []) });
 }
 
 /** Text with BOM removed and CRLF normalized; what source mode edits. */
@@ -83,6 +91,14 @@ const sourceTheme = EditorView.theme({
     caretColor: "var(--gmd-text)",
   },
   ".cm-line": { padding: "0" },
+  ".cm-gutters": {
+    backgroundColor: "transparent",
+    color: "var(--gmd-text-muted)",
+    border: "none",
+    fontFamily: "var(--gmd-font-mono)",
+    lineHeight: "1.6",
+  },
+  ".cm-lineNumbers .cm-gutterElement": { padding: "0 12px 0 16px" },
   ".cm-cursor, .cm-dropCursor": { borderLeftColor: "var(--gmd-text)" },
   "&.cm-focused .cm-selectionBackground, .cm-selectionBackground, .cm-content ::selection": {
     backgroundColor: "var(--gmd-selection)",

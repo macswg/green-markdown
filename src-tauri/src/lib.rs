@@ -399,6 +399,13 @@ fn build_menu(app: &AppHandle) -> tauri::Result<Menu<tauri::Wry>> {
         true,
         Some("CmdOrCtrl+/"),
     )?;
+    let line_numbers = MenuItem::with_id(
+        app,
+        "toggle_line_numbers",
+        "Toggle Line Numbers",
+        true,
+        Some("CmdOrCtrl+Shift+L"),
+    )?;
 
     let edit = Submenu::with_items(
         app,
@@ -426,7 +433,15 @@ fn build_menu(app: &AppHandle) -> tauri::Result<Menu<tauri::Wry>> {
         app,
         "View",
         true,
-        &[&outline, &source, &sep()?, &zoom_in, &zoom_out, &zoom_reset],
+        &[
+            &outline,
+            &source,
+            &line_numbers,
+            &sep()?,
+            &zoom_in,
+            &zoom_out,
+            &zoom_reset,
+        ],
     )?;
 
     #[cfg(target_os = "macos")]
@@ -515,8 +530,14 @@ fn handle_menu(app: &AppHandle, id: &str) {
                     open_all(&handle, paths, reuse);
                 });
         }
-        "save" | "save_as" | "find" | "find_next" | "find_prev" | "toggle_outline"
-        | "toggle_source" => {
+        "save"
+        | "save_as"
+        | "find"
+        | "find_next"
+        | "find_prev"
+        | "toggle_outline"
+        | "toggle_source"
+        | "toggle_line_numbers" => {
             if let Some(window) = focused_window(app) {
                 let _ = window.emit_to(window.label(), "menu", id);
             }

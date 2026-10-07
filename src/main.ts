@@ -45,7 +45,7 @@ import {
   sourceHeadings,
 } from "./outline";
 import type { Settings } from "./settings";
-import { createSourceEditor, fromSourceText, toSourceText } from "./source";
+import { createSourceEditor, fromSourceText, setLineNumbers, toSourceText } from "./source";
 import { applyAppearance, applyTheme, loadConfig } from "./theme";
 
 const appWindow = getCurrentWindow();
@@ -366,6 +366,7 @@ async function enterSourceMode(): Promise<void> {
     root: sourceRoot,
     text: sourceEntryText,
     spellcheck: settings.editor.spellcheck,
+    lineNumbers: showLineNumbers,
     plain: isPlainTextPath(path),
     languages,
     onChange: () => updateDirty(),
@@ -495,6 +496,29 @@ findbar.addEventListener("click", (event) => {
 document.addEventListener("keydown", (event) => {
   if (event.key === "Escape" && !findbar.hidden && !event.defaultPrevented) closeFind();
 });
+
+// ---------------------------------------------------------------------------
+// Line numbers (source mode)
+// ---------------------------------------------------------------------------
+
+const LINE_NUMBERS_KEY = "gmd.lineNumbers";
+let showLineNumbers = false;
+try {
+  showLineNumbers = localStorage.getItem(LINE_NUMBERS_KEY) === "1";
+} catch {
+  // Default: off.
+}
+
+function toggleLineNumbers(): void {
+  showLineNumbers = !showLineNumbers;
+  try {
+    localStorage.setItem(LINE_NUMBERS_KEY, showLineNumbers ? "1" : "0");
+  } catch {
+    // Storage unavailable; the choice just isn't remembered.
+  }
+  if (source) setLineNumbers(source, showLineNumbers);
+  else if (showLineNumbers) showBanner("Line numbers show in source mode (⌘/).");
+}
 
 // ---------------------------------------------------------------------------
 // Outline
@@ -689,6 +713,7 @@ async function main(): Promise<void> {
     if (payload === "find_next") stepFind(1);
     if (payload === "find_prev") stepFind(-1);
     if (payload === "toggle_outline") toggleOutline();
+    if (payload === "toggle_line_numbers") toggleLineNumbers();
     if (payload === "toggle_source") serially(toggleSourceMode);
   });
   await appWindow.listen<string>("update-progress", ({ payload }) => {

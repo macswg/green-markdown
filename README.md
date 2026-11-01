@@ -92,7 +92,7 @@ updates signed with a new key and have to be reinstalled by hand.
 | Block menu | Type `/` on an empty line, or use the `+`/drag handle at the left |
 | Find | ⌘F, then ↵ / ⇧↵ (or ⌘G / ⇧⌘G) for next/previous, Esc to close. `Aa` matches case |
 | Outline | ⇧⌘O (View → Toggle Outline) shows a heading sidebar; click to jump |
-| Source mode | ⌘/ (View → Toggle Source Mode), or "Source mode" in the `/` menu. Edits the raw file, front matter included, byte-for-byte |
+| Source mode | ⌘/ (View → Toggle Source Mode), or "Source mode" in the `/` menu. Edits the raw file, front matter included, byte-for-byte. Files over 1 MB open in source mode, since the rich view is slow or unresponsive at that size |
 | Collapsible sections | `<details>` / `<summary>` blocks render as collapsible sections; the summary and body are editable |
 | Front matter | YAML/TOML front matter appears as a collapsible raw block at the top |
 | Config folder | App menu (macOS) / File menu → Open Config Folder |

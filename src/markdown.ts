@@ -186,6 +186,16 @@ export function isPlainTextPath(path: string | null): boolean {
   return path !== null && /\.txt$/i.test(path);
 }
 
+/**
+ * Above this size (in characters) the rich editor takes seconds to build and
+ * can exhaust the webview's memory, so such files open in source mode.
+ */
+export const LARGE_DOCUMENT_CHARS = 1_000_000;
+
+export function isLargeDocument(text: string | null): boolean {
+  return text !== null && text.length > LARGE_DOCUMENT_CHARS;
+}
+
 /** Files the app opens from links and drag-and-drop. */
 export function isOpenablePath(path: string): boolean {
   return isMarkdownPath(path) || isPlainTextPath(path);

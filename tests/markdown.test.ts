@@ -2,7 +2,9 @@ import { describe, expect, test } from "vitest";
 import {
   detectStyle,
   emptyDocument,
+  isLargeDocument,
   isOpenablePath,
+  LARGE_DOCUMENT_CHARS,
   isPlainTextPath,
   joinDocument,
   resolveLocalPath,
@@ -127,5 +129,11 @@ describe("file kinds", () => {
     expect(isOpenablePath("a.md")).toBe(true);
     expect(isOpenablePath("a.txt")).toBe(true);
     expect(isOpenablePath("a.png")).toBe(false);
+  });
+
+  test("large documents", () => {
+    expect(isLargeDocument("x".repeat(LARGE_DOCUMENT_CHARS))).toBe(false);
+    expect(isLargeDocument("x".repeat(LARGE_DOCUMENT_CHARS + 1))).toBe(true);
+    expect(isLargeDocument(null)).toBe(false);
   });
 });

@@ -31,6 +31,7 @@ import {
   detectStyle,
   emptyDocument,
   fileName,
+  isLargeDocument,
   isOpenablePath,
   isPlainTextPath,
   joinDocument,
@@ -145,12 +146,26 @@ async function showDocument(raw: string | null): Promise<void> {
     source.dispatch({
       changes: { from: 0, to: source.state.doc.length, insert: sourceEntryText },
     });
+  } else if (isLargeDocument(raw)) {
+    // Too big for the rich editor: mount it empty as a placeholder and open
+    // in source mode. Marking it stale makes leaving source mode rebuild it.
+    await mountEditor("");
+    baseline = "";
+    setDirty(false);
+    await enterSourceMode();
+    richStale = true;
   } else {
     await mountEditor(doc.body);
     baseline = editor!.getMarkdown();
   }
   setDirty(false);
   hideBanner();
+  if (source && isLargeDocument(raw)) {
+    const mb = (raw!.length / 1_000_000).toFixed(1);
+    showBanner(
+      `Large file (${mb} MB) opened in source mode. ⌘/ switches to the rich view, which may be slow or unresponsive at this size.`,
+    );
+  }
   debug(`showing ${path ?? "untitled"} (${raw?.length ?? 0} chars)`);
 }
 

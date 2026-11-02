@@ -611,3 +611,22 @@ body.gmd-block-dragging * {
   width: var(--gmd-handle-size, 16px);
   height: var(--gmd-handle-size, 16px);
 }
+
+/* "⌘-click to open link" hint shown while hovering a link. */
+.gmd-link-hint {
+  position: fixed;
+  z-index: 100;
+  padding: 2px 6px;
+  border: 1px solid var(--gmd-border);
+  border-radius: 4px;
+  background: var(--gmd-surface);
+  color: var(--gmd-text-muted);
+  font-family: var(--gmd-font-body);
+  font-size: 11px;
+  white-space: nowrap;
+  pointer-events: none;
+}
+
+.gmd-link-hint[hidden] {
+  display: none;
+}

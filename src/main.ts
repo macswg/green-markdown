@@ -680,6 +680,31 @@ editorRoot.addEventListener("click", (event) => {
   }
 });
 
+// Hovering a link shows how to open it, just below the link (Crepe's own
+// link preview sits above).
+const linkHint = document.createElement("div");
+linkHint.className = "gmd-link-hint";
+linkHint.textContent = /Mac/.test(navigator.userAgent)
+  ? "⌘-click to open link"
+  : "Ctrl-click to open link";
+linkHint.hidden = true;
+document.body.append(linkHint);
+
+editorRoot.addEventListener("mouseover", (event) => {
+  const anchor = (event.target as HTMLElement).closest("a[href]");
+  if (!anchor) return;
+  const rect = anchor.getClientRects()[0] ?? anchor.getBoundingClientRect();
+  linkHint.style.left = `${rect.left}px`;
+  linkHint.style.top = `${rect.bottom + 4}px`;
+  linkHint.hidden = false;
+});
+
+editorRoot.addEventListener("mouseout", (event) => {
+  const anchor = (event.target as HTMLElement).closest("a[href]");
+  if (anchor && !anchor.contains(event.relatedTarget as Node | null)) linkHint.hidden = true;
+});
+scroller.addEventListener("scroll", () => (linkHint.hidden = true), { passive: true });
+
 // Never let the webview navigate away from the editor.
 document.addEventListener("click", (event) => {
   if ((event.target as HTMLElement).closest("a[href]")) event.preventDefault();

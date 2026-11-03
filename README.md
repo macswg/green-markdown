@@ -41,8 +41,15 @@ repo's config (sync it with git).
 
 ### Installing a release instead
 
-Download `Green.Markdown_aarch64.app.tar.gz` (Apple Silicon) from
-[Releases](https://github.com/macswg/green-markdown/releases).
+From [Releases](https://github.com/macswg/green-markdown/releases), download
+`Green.Markdown_aarch64.app.tar.gz` (macOS, Apple Silicon) or
+`Green.Markdown_<version>_x64-setup.exe` (Windows; an `.msi` is there too).
+
+On Windows, run the installer. It isn't code-signed, so SmartScreen may say
+"Windows protected your PC": click **More info** → **Run anyway**. To make it
+the default for markdown files: right-click any `.md` → Open with → Choose
+another app → Green Markdown → Always.
+
 On macOS, unpack it into `/Applications` and clear the download quarantine once
 (the app is ad-hoc signed, not notarized):
 
@@ -72,8 +79,13 @@ scripts/release.sh 0.2.0
 
 This bumps the version in `package.json`, `tauri.conf.json` and `Cargo.toml`,
 commits, tags `v0.2.0` and pushes. The [release workflow](.github/workflows/release.yml)
-builds macOS for Apple Silicon, signs the update bundles, and
+builds macOS (Apple Silicon) and Windows (x64), signs the update bundles, and
 publishes them with `latest.json` to this repo's Releases.
+
+To try a build without releasing, run the workflow by hand (Actions → Release →
+Run workflow). Pick the platforms; the installers are attached to the run as
+artifacts. Ticking **publish** uploads to the release for the current version
+instead.
 
 Repo secrets used by the workflow: `TAURI_SIGNING_PRIVATE_KEY` (contents of
 `.secrets/updater.key`) and `TAURI_SIGNING_PRIVATE_KEY_PASSWORD` (contents of

@@ -1,19 +1,42 @@
 # Builds Green Markdown and publishes a GitHub release (with the updater's
 # latest.json). Trigger: push a tag like `v0.2.0` (see scripts/release.sh).
+#
+# Run it by hand (Actions → Release → Run workflow) for a test build: by default
+# that only builds and attaches the installers to the run as artifacts. Tick
+# "publish" to upload to the release for the current app version instead.
 name: Release
 
 on:
   push:
     tags: ["v*"]
   workflow_dispatch:
+    inputs:
+      platforms:
+        description: Platforms to build
+        type: choice
+        options: [both, windows-latest, macos-latest]
+        default: both
+      publish:
+        description: Publish to the GitHub release for the current version
+        type: boolean
+        default: false
 
 permissions:
   contents: write
 
 jobs:
   build:
-    # Apple Silicon only (macos-latest runners are arm64).
-    runs-on: macos-latest
+    strategy:
+      # One platform failing shouldn't cancel the other's upload.
+      fail-fast: false
+      matrix:
+        # macos-latest runners are arm64 (Apple Silicon only). Windows builds
+        # x64 NSIS (.exe) and MSI installers. Both jobs upload to the same
+        # release, and tauri-action merges each platform into latest.json.
+        platform: ${{ fromJSON((inputs.platforms && inputs.platforms != 'both') && format('["{0}"]', inputs.platforms) || '["macos-latest","windows-latest"]') }}
+    runs-on: ${{ matrix.platform }}
+    env:
+      PUBLISH: ${{ github.event_name == 'push' || inputs.publish }}
     steps:
       - uses: actions/checkout@v4
 
@@ -30,7 +53,9 @@ jobs:
 
       - run: npm ci
 
-      - uses: tauri-apps/tauri-action@v0
+      - name: Build and publish release
+        if: env.PUBLISH == 'true'
+        uses: tauri-apps/tauri-action@v0
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           TAURI_SIGNING_PRIVATE_KEY: ${{ secrets.TAURI_SIGNING_PRIVATE_KEY }}
@@ -42,3 +67,22 @@ jobs:
           releaseDraft: false
           prerelease: false
           includeUpdaterJson: true
+
+      # Test build: no tagName, so tauri-action builds without touching Releases.
+      - name: Build only
+        if: env.PUBLISH != 'true'
+        uses: tauri-apps/tauri-action@v0
+        env:
+          TAURI_SIGNING_PRIVATE_KEY: ${{ secrets.TAURI_SIGNING_PRIVATE_KEY }}
+          TAURI_SIGNING_PRIVATE_KEY_PASSWORD: ${{ secrets.TAURI_SIGNING_PRIVATE_KEY_PASSWORD }}
+
+      - name: Upload installers to the run
+        if: env.PUBLISH != 'true'
+        uses: actions/upload-artifact@v4
+        with:
+          name: green-markdown-${{ matrix.platform }}
+          path: |
+            src-tauri/target/release/bundle/nsis/*.exe
+            src-tauri/target/release/bundle/msi/*.msi
+            src-tauri/target/release/bundle/dmg/*.dmg
+          if-no-files-found: error

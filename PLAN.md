@@ -148,7 +148,7 @@ Details:
 - Export to HTML / PDF, focus mode, word count.
 - `gmd` CLI shim on PATH.
 - Math / Mermaid (lazy-loaded).
-- GitHub Actions builds for Windows / Linux.
+- GitHub Actions builds for Linux (macOS and Windows are built today).
 
 ---
 
@@ -201,7 +201,8 @@ follows Prettier and `cargo fmt` conventions. It's listed under
   built app isn't quarantined. Set it as the default for `.md` via Finder →
   Get Info → Open with → Change All.
 - **Windows / Linux:** build on those machines with the same command. This also
-  records that machine's repo `config/` path. CI builds are deferred.
+  records that machine's repo `config/` path. The release workflow builds
+  Windows installers in CI; Linux CI builds are deferred.
 
 ---
 

@@ -12,7 +12,7 @@ those files are saved.
   [Saving](#saving)).
 - **Live:** when a file changes on disk (Claude, git, another editor), it
   reloads. If you have unsaved edits, a banner asks what to do.
-- **Cross-platform:** macOS first; Windows and Linux build from the same source.
+- **Cross-platform:** macOS and Windows releases; Linux builds from the same source.
 
 See [PLAN.md](PLAN.md) for the design and roadmap.
 
@@ -21,7 +21,9 @@ See [PLAN.md](PLAN.md) for the design and roadmap.
 Prerequisites: Node 20+, Rust (`brew install rustup && rustup default stable`),
 and Xcode Command Line Tools on macOS. On Linux, also install the
 [Tauri system packages](https://tauri.app/start/prerequisites/). On Windows,
-WebView2 is already present on Windows 10/11.
+install Rust with `winget install Rustlang.Rustup` and the Visual Studio C++
+Build Tools ("Desktop development with C++"); WebView2 is already present on
+Windows 10/11.
 
 ```bash
 git clone https://github.com/macswg/green-markdown.git
@@ -36,13 +38,20 @@ On macOS the build produces `Green Markdown.app` (plus a `.dmg`). Copy it to
 any `.md` → Get Info → Open with → Green Markdown → Change All. The app isn't
 signed, but a build made on your own Mac opens normally.
 
+On Windows the build produces an installer in `bundle/nsis/` (and an `.msi` in
+`bundle/msi/`). Installing registers Green Markdown for `.md` files; pick it
+once under right-click → Open with → Choose another app → Always.
+
 A local build records that checkout's `config/` path, so the machine uses the
 repo's config (sync it with git).
 
 ### Installing a release instead
 
-Download `Green.Markdown_aarch64.app.tar.gz` (Apple Silicon) from
-[Releases](https://github.com/macswg/green-markdown/releases).
+Download `Green.Markdown_aarch64.app.tar.gz` (Apple Silicon) or
+`Green.Markdown_<version>_x64-setup.exe` (Windows) from
+[Releases](https://github.com/macswg/green-markdown/releases). On Windows,
+SmartScreen warns because the installer isn't code-signed: click More info →
+Run anyway.
 On macOS, unpack it into `/Applications` and clear the download quarantine once
 (the app is ad-hoc signed, not notarized):
 

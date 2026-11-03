@@ -1,0 +1,6 @@
+# Keep LF everywhere, including Windows checkouts: the round-trip test
+# fixtures are compared byte-for-byte, and config.rs edits settings.json by line.
+* text=auto eol=lf
+*.png binary
+*.ico binary
+*.icns binary

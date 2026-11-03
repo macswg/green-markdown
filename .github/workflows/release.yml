@@ -12,8 +12,14 @@ permissions:
 
 jobs:
   build:
-    # Apple Silicon only (macos-latest runners are arm64).
-    runs-on: macos-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        # macos-latest runners are arm64 (Apple Silicon); windows-latest is x64.
+        # Both jobs upload to the same release and merge their entries into
+        # one latest.json.
+        platform: [macos-latest, windows-latest]
+    runs-on: ${{ matrix.platform }}
     steps:
       - uses: actions/checkout@v4
 
@@ -38,7 +44,9 @@ jobs:
         with:
           tagName: v__VERSION__
           releaseName: Green Markdown v__VERSION__
-          releaseBody: Installed apps update from the Green Markdown menu → Check for Updates….
+          releaseBody: Installed apps update from Check for Updates… (the Green Markdown menu on macOS, Help on Windows).
           releaseDraft: false
           prerelease: false
           includeUpdaterJson: true
+          # Windows builds both an MSI and an NSIS installer; update via NSIS.
+          updaterJsonPreferNsis: true

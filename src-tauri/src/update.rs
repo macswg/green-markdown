@@ -64,6 +64,16 @@ async fn run(app: &AppHandle) -> Result<(), String> {
     if !install {
         return Ok(());
     }
+    // On Windows the installer runs as soon as the download finishes and
+    // closes the app, so unsaved changes would be lost.
+    if cfg!(windows) && any_dirty(app) {
+        show(
+            app,
+            MessageDialogKind::Warning,
+            "Green Markdown closes to install the update. Save or close your edited documents, then check for updates again.",
+        );
+        return Ok(());
+    }
 
     let mut received = 0usize;
     update
@@ -92,14 +102,7 @@ async fn run(app: &AppHandle) -> Result<(), String> {
         ),
         "Restart",
     ) {
-        let any_dirty = app
-            .state::<AppState>()
-            .docs
-            .lock()
-            .unwrap()
-            .values()
-            .any(|d| d.dirty);
-        if any_dirty {
+        if any_dirty(app) {
             // Let each window ask about its unsaved changes; the new version
             // opens next time the app is launched.
             crate::request_quit(app);
@@ -108,6 +111,15 @@ async fn run(app: &AppHandle) -> Result<(), String> {
         }
     }
     Ok(())
+}
+
+fn any_dirty(app: &AppHandle) -> bool {
+    app.state::<AppState>()
+        .docs
+        .lock()
+        .unwrap()
+        .values()
+        .any(|d| d.dirty)
 }
 
 /// Shows `text` in every window's banner; empty hides it.

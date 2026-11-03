@@ -754,14 +754,16 @@ mod tests {
 
     #[test]
     fn cli_paths_skips_flags_and_resolves_relative() {
-        let cwd = Path::new("/work");
-        let args = ["-psn_0_123", "notes.md", "/abs/readme.md", ""].map(String::from);
+        // "/abs" has no drive letter, so it isn't absolute on Windows.
+        let (cwd, abs) = if cfg!(windows) {
+            (Path::new(r"C:\work"), r"D:\abs\readme.md")
+        } else {
+            (Path::new("/work"), "/abs/readme.md")
+        };
+        let args = ["-psn_0_123", "notes.md", abs, ""].map(String::from);
         assert_eq!(
             cli_paths(args, Some(cwd)),
-            vec![
-                PathBuf::from("/work/notes.md"),
-                PathBuf::from("/abs/readme.md")
-            ]
+            vec![cwd.join("notes.md"), PathBuf::from(abs)]
         );
     }
 }

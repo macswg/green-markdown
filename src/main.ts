@@ -66,6 +66,10 @@ const frontmatterInput = frontmatterBox.querySelector("textarea") as HTMLTextAre
 const banner = document.getElementById("banner") as HTMLElement;
 const titlebarEl = document.getElementById("titlebar") as HTMLElement;
 
+const isMac = /Mac/.test(navigator.userAgent);
+/** Shortcut modifier as written in hints: "⌘/" on macOS, "Ctrl+/" elsewhere. */
+const MOD = isMac ? "⌘" : "Ctrl+";
+
 /** Logs to the terminal running `tauri dev`; a no-op in release builds. */
 function debug(message: string): void {
   if (import.meta.env.DEV) void invoke("dev_log", { message });
@@ -163,7 +167,7 @@ async function showDocument(raw: string | null): Promise<void> {
   if (source && isLargeDocument(raw)) {
     const mb = (raw!.length / 1_000_000).toFixed(1);
     showBanner(
-      `Large file (${mb} MB) opened in source mode. ⌘/ switches to the rich view, which may be slow or unresponsive at this size.`,
+      `Large file (${mb} MB) opened in source mode. ${MOD}/ switches to the rich view, which may be slow or unresponsive at this size.`,
     );
   }
   debug(`showing ${path ?? "untitled"} (${raw?.length ?? 0} chars)`);
@@ -296,7 +300,7 @@ async function save(saveAs = false): Promise<boolean> {
 // ---------------------------------------------------------------------------
 
 /** macOS only: elsewhere the native title bar stays. */
-const titlebar = /Mac/.test(navigator.userAgent)
+const titlebar = isMac
   ? createTitlebar({ root: titlebarEl, canRename: () => path !== null, rename: renameFile })
   : null;
 titlebarEl.hidden = titlebar === null;
@@ -563,7 +567,7 @@ function toggleLineNumbers(): void {
     // Storage unavailable; the choice just isn't remembered.
   }
   if (source) setLineNumbers(source, showLineNumbers);
-  else if (showLineNumbers) showBanner("Line numbers show in source mode (⌘/).");
+  else if (showLineNumbers) showBanner(`Line numbers show in source mode (${MOD}/).`);
 }
 
 // ---------------------------------------------------------------------------
@@ -684,9 +688,7 @@ editorRoot.addEventListener("click", (event) => {
 // link preview sits above).
 const linkHint = document.createElement("div");
 linkHint.className = "gmd-link-hint";
-linkHint.textContent = /Mac/.test(navigator.userAgent)
-  ? "⌘-click to open link"
-  : "Ctrl-click to open link";
+linkHint.textContent = isMac ? "⌘-click to open link" : "Ctrl-click to open link";
 linkHint.hidden = true;
 document.body.append(linkHint);
 
